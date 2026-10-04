@@ -1,0 +1,4 @@
+# Cloudflare Pages: make browsers check for a newer copy of every file before reusing a saved one,
+# so edits show up right away. Unchanged files still load fast (the server just answers "not modified").
+/*
+  Cache-Control: public, max-age=0, must-revalidate
