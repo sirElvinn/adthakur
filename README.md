@@ -1,6 +1,6 @@
 # adthakur: personal portfolio
 
-A four-page portfolio site for Aditya Bikram Thakur. It is plain HTML, CSS, and a little JavaScript.
+A four-page portfolio site for Aditya Bikram Thakur, live at https://adthakur.com. It is plain HTML, CSS, and a little JavaScript.
 There is no framework and no build step, so what you see in these files is exactly what the browser gets.
 
 ## What's in the folder
@@ -19,7 +19,7 @@ background written from scratch.
 | `pixels.js` | The animated pixel background. Comments at the top explain how it works. |
 | `assets/` | Images, the résumé PDF, and the tab icon. |
 | `_headers` | Tells Cloudflare to have browsers re-check files before reusing saved copies, so edits show up right away. |
-| `archive/` | The first version of the site, kept as a backup. It is not published. |
+| `archive/` | The first version of the site, kept as a backup on this computer only (not in Git, not published). |
 
 The header and the phone tab bar are copied into all four pages. If you rename a page or add one,
 change the menu in each file.
@@ -45,22 +45,23 @@ Then open http://localhost:8417 in a browser. Press Ctrl+C in the terminal to st
 
 ## Where it's hosted
 
-The site is live at **https://adthakur.com** (also **www.adthakur.com** and **adthakur.pages.dev**).
-It runs on Cloudflare Pages, in the project named `adthakur`, for free. The domain's DNS lives in the same
-Cloudflare account, so the records were created automatically.
+The code lives on GitHub at **https://github.com/sirElvinn/adthakur**, and the site is live at
+**https://adthakur.com** (also **www.adthakur.com** and **adthakur-site.pages.dev**).
+
+It runs on Cloudflare Pages, in the project named `adthakur-site`, which is connected to the GitHub repo.
+There is no build step: Cloudflare serves the files in this repo exactly as they are.
+(An older project called `adthakur` was the first, upload-only version; it is no longer attached to the domain.)
 
 ## Publishing a change
 
-1. Make a zip of just the public files (this leaves out the README, the backup and settings):
+Every push to the `main` branch publishes itself. Open a terminal in this folder and run:
 
-   ```bash
-   zip -r ~/Desktop/adthakur-site.zip _headers index.html projects.html experience.html contact.html styles.css site.js pixels.js assets -x "*.DS_Store"
-   ```
+```bash
+git add -A && git commit -m "Describe what you changed" && git push
+```
 
-2. In Cloudflare go to **Workers & Pages → adthakur → Create deployment**, drop in the zip, and click
-   **Save and deploy**. The new version is live on adthakur.com within a minute.
-3. If you broke something, the **Deployments** tab lists every earlier version, and any of them can be
-   put back with one click ("Rollback").
+About a minute later the change is live on adthakur.com. In Cloudflare, **Workers & Pages → adthakur-site →
+Deployments** lists every version, and any earlier one can be put back with one click ("Rollback").
 
 ## Keeping it up to date
 
