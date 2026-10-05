@@ -774,61 +774,150 @@
   }
 
   // ---------------------------------------------------------------- scene 6: DiatoMeter
-  var SHELLS = null;
-  function shells() {
-    if (SHELLS) return SHELLS;
-    var r = mulberry32(136), out = [], tries = 0;
-    while (out.length < 136 && tries < 40000) {
-      tries++;
-      var rad = 6 + r() * 5, a = r() * Math.PI * 2, d = Math.sqrt(r()) * (196 - rad);
-      var x = 480 + Math.cos(a) * d, y = 285 + Math.sin(a) * d, ok = true;
-      for (var i = 0; i < out.length; i++) {
-        if (Math.hypot(out[i].x - x, out[i].y - y) < out[i].r + rad + 2.5) { ok = false; break; }
+  // Drawn after the app's results screen: an SEM image of Didymo frustules (club-shaped glass shells) on a mat
+  // of debris. A scan sweeps across, and the app traces each shell in colour: green intact, amber cracked,
+  // red fragmented, grey cut by the image edge. A side panel counts them and fills the stacked bar.
+  var MX = 494, MY = 86, MS = 330;                                    // the micrograph square
+  var D_GREEN = "#6dbb73", D_AMBER = "#e4a93c", D_RED = "#e05a45", D_GREY = "#9a968c";
+  // half-width along the shell, foot (-1) to head (1): a broad body, a pinched neck, then a round head
+  var CLUB = [[-1, 0.06], [-0.7, 0.095], [-0.25, 0.13], [0.15, 0.12], [0.42, 0.07], [0.7, 0.125], [1, 0.09]];
+  function clubPts(f, grow) {
+    var A = [], B = [], n = 22, uEnd = f.cut || 1;
+    for (var i = 0; i <= n; i++) {
+      var u = -Math.cos((Math.PI * i) / n), w = 0;
+      if (u > uEnd) break;
+      for (var k = 0; k < CLUB.length - 1; k++) {
+        if (u <= CLUB[k + 1][0]) { w = lerp(CLUB[k][1], CLUB[k + 1][1], (u - CLUB[k][0]) / (CLUB[k + 1][0] - CLUB[k][0])); break; }
       }
-      if (ok) out.push({ x: x, y: y, r: rad });
+      w *= Math.sqrt(Math.max(0, 1 - Math.pow(Math.abs(u), 6))) * f.L * grow;
+      var al = (u * f.L * grow) / 2 * (f.flip ? -1 : 1);
+      A.push([al, w]); B.push([al, -w]);
     }
-    out.sort(function (p, q) { return p.x - q.x; });   // measured left to right, like a scan
-    return (SHELLS = out);
+    var poly = A;
+    if (f.cut) {                                                       // a broken shell: a jagged end
+      var e = A[A.length - 1][0], h = A[A.length - 1][1], d = f.flip ? -1 : 1;
+      poly = poly.concat([[e + 4 * d, h * 0.4], [e - 2 * d, 0], [e + 3 * d, -h * 0.5]]);
+    }
+    poly = poly.concat(B.reverse());
+    var ca = Math.cos(f.a), sa = Math.sin(f.a);
+    return poly.map(function (p) { return [f.x + p[0] * ca - p[1] * sa, f.y + p[0] * sa + p[1] * ca]; });
   }
+  var FRUST = null;
+  function frustules() {
+    if (FRUST) return FRUST;
+    var r = mulberry32(2026), shells = [], bits = [], dust = [], tries = 0, i;
+    while (shells.length < 44 && tries++ < 6000) {
+      var L = 52 + r() * 34, x = MX - 8 + r() * (MS + 16), y = MY - 8 + r() * (MS + 16);
+      var ok = shells.every(function (f) { return Math.hypot(f.x - x, f.y - y) > (f.L + L) * 0.29; });
+      if (ok) shells.push({ x: x, y: y, L: L, a: r() * Math.PI, flip: r() < 0.5 });
+    }
+    shells.forEach(function (f, k) {
+      var kind = k % 10;
+      f.status = kind === 0 || kind === 6 ? "intact" : kind === 3 || kind === 8 || kind === 5 ? "cracked" : "fragmented";
+      if (f.status === "fragmented") f.cut = 0.15 + r() * 0.5;
+      f.poly = clubPts(f, 1);
+      f.trace = clubPts(f, 1.12);
+      if (f.poly.some(function (p) { return p[0] < MX || p[0] > MX + MS || p[1] < MY || p[1] > MY + MS; })) f.status = "edge";
+      f.crack = [];
+      if (f.status === "cracked") {                                    // a zigzag crack across the shell
+        var ca = Math.cos(f.a), sa = Math.sin(f.a), at = (r() - 0.5) * f.L * 0.5;
+        for (var c = -2; c <= 2; c++) {
+          var al = at + (c % 2 ? 3 : -3), ac = c * f.L * 0.03;
+          f.crack.push([f.x + al * ca - ac * sa, f.y + al * sa + ac * ca]);
+        }
+      }
+    });
+    for (i = 0; i < 18; i++) {                                         // loose fragments
+      var bx = MX + 10 + r() * (MS - 20), by = MY + 10 + r() * (MS - 20), br = 4 + r() * 6, pts = [];
+      for (var j = 0; j < 6; j++) { var ang = (j / 6) * Math.PI * 2 + r() * 0.5, rr = br * (0.6 + r() * 0.5); pts.push([bx + Math.cos(ang) * rr, by + Math.sin(ang) * rr]); }
+      bits.push({ x: bx, poly: pts, status: "fragmented" });
+    }
+    for (i = 0; i < 170; i++) dust.push([MX + r() * MS, MY + r() * MS, r() * Math.PI, 2 + r() * 6]);
+    var all = shells.concat(bits).sort(function (p, q) { return p.x - q.x; });   // traced left to right, like the scan
+    return (FRUST = { shells: shells, bits: bits, dust: dust, all: all });
+  }
+  function statusColor(s) { return s === "intact" ? D_GREEN : s === "cracked" ? D_AMBER : s === "edge" ? D_GREY : D_RED; }
 
   function sMicro(t) {
-    var cx = 480, cy = 285, S = shells(), i;
-    fill(circlePts(cx, cy, 212, 0.6), "#1c1b19", prog(t, 0.05, 0.4), { still: true });
-    brush(circlePts(cx, cy, 214, 0.8), 7, prog(t, 0.1, 1.0), { taper: 0.02 });
-    brush(circlePts(cx, cy, 228, 0.8), 2.2, prog(t, 0.3, 1.0), { taper: 0.02 });
+    var F = frustules(), i, m0 = 2.4, mDur = 3.4;
+    // a desktop electron microscope on the bench, cabled to the laptop
+    var sa = prog(t, 0.2, 0.9);
+    brush(seg(30, 500, 940, 500, 0.6), 2, prog(t, 0.1, 1), { alpha: 0.8 });
+    fill(rectPts(110, 420, 214, 80, 0.6), INK, 1, { still: true });
+    brush(rectPts(110, 420, 214, 80, 0.6), 2.2, sa, { taper: 0.02 });                   // the vacuum chamber
+    fill(rectPts(190, 330, 52, 90, 0.4), INK, 1, { still: true });
+    brush(rectPts(190, 330, 52, 90, 0.4), 2.2, prog(t, 0.4, 0.7), { taper: 0.02 });    // the electron column
+    brush(seg(190, 356, 242, 356, 0.2), 1.4, prog(t, 0.6, 0.4), { alpha: 0.8 });
+    brush(seg(190, 386, 242, 386, 0.2), 1.4, prog(t, 0.65, 0.4), { alpha: 0.8 });
+    brush(rectPts(182, 316, 68, 16, 0.3), 2, prog(t, 0.7, 0.4), { taper: 0.03 });     // its cap
+    brush(rectPts(140, 440, 92, 48, 0.4), 1.6, prog(t, 0.6, 0.5), { taper: 0.03 });   // the sample door
+    brush(seg(222, 456, 222, 474, 0.1), 3, prog(t, 0.8, 0.3), {});
+    fill(circlePts(296, 440, 5, 0.1), PAPER, prog(t, 0.8, 0.3) * 0.8);                 // power light
+    brush(path([[324, 474], [400, 490], [450, 474], [482, 440]], 0.6), 2, prog(t, 0.9, 0.7), { alpha: 0.8 });   // the cable
+    // the app window
+    var wa = prog(t, 0.1, 0.8);
+    fill(rectPts(480, 40, 456, 406, 0.6), "#171614", wa, { still: true });
+    brush(rectPts(480, 40, 456, 406, 0.8), 2, wa, { taper: 0.02 });
+    brush(seg(480, 66, 936, 66, 0.4), 1.4, wa, { alpha: 0.7 });
+    for (i = 0; i < 3; i++) fill(circlePts(496 + i * 13, 53, 3.6, 0.1), PAPER, wa * 0.7);
 
-    for (i = 0; i < S.length; i++) {
-      var s = S[i], ap = prog(t, 0.4 + (i / S.length) * 1.8, 0.25);
-      brush(circlePts(s.x, s.y, s.r, 0.4), 1.6, ap, { taper: 0.05 });
-      for (var k = 0; k < 4; k++) {
-        var a = (k * Math.PI) / 4 + (i % 3) * 0.3;
-        brush(seg(s.x - Math.cos(a) * s.r * 0.65, s.y - Math.sin(a) * s.r * 0.65, s.x + Math.cos(a) * s.r * 0.65, s.y + Math.sin(a) * s.r * 0.65, 0.1),
-          0.9, ap, { alpha: 0.6, taper: 0.2 });
-      }
-    }
+    // the micrograph: a grainy mat of debris with the shells on top
+    var ma = prog(t, 0.4, 0.6);
+    fill(rectPts(MX, MY, MS, MS, 0.3), "#3a3833", ma, { still: true });
+    ctx.save();
+    ctx.beginPath(); ctx.rect(MX, MY, MS, MS); ctx.clip();
+    F.dust.forEach(function (d) {
+      brush(seg(d[0], d[1], d[0] + Math.cos(d[2]) * d[3], d[1] + Math.sin(d[2]) * d[3], 0.2), 1.3, ma, { alpha: 0.3, taper: 0.3 });
+    });
+    F.shells.forEach(function (f, k) {
+      var fa = prog(t, 0.6 + (k / F.shells.length) * 1.2, 0.4);
+      fill(f.poly, "#b9b3a6", fa * 0.85);
+      brush(f.poly.concat([f.poly[0]]), 1.3, fa, { alpha: 0.9, taper: 0.02 });
+      // the raphe: the slit running down the middle of the shell
+      var ca = Math.cos(f.a), sa = Math.sin(f.a), d = (f.flip ? -1 : 1) * f.L / 2, u0 = -0.8, u1 = f.cut ? f.cut - 0.12 : 0.8;
+      brush(seg(f.x + ca * u0 * d, f.y + sa * u0 * d, f.x + ca * u1 * d, f.y + sa * u1 * d, 0.2), 1, fa, { color: INK, alpha: 0.45, taper: 0.2 });
+      if (f.crack.length) brush(f.crack, 1.4, fa, { color: INK, alpha: 0.8, taper: 0.1 });
+    });
+    F.bits.forEach(function (b, k) { fill(b.poly, "#a39d91", prog(t, 1.2 + k * 0.05, 0.3) * 0.8); });
 
-    var m0 = 2.6, mDur = 3.2, count = 0;
-    for (i = 0; i < S.length; i++) {
-      var mp = prog(t, m0 + (i / S.length) * mDur, 0.15);
-      if (mp >= 1) count++;
-      fill(circlePts(S[i].x, S[i].y, S[i].r - 0.5, 0.2), PAPER, mp * 0.9);
-      brush(seg(S[i].x - S[i].r + 2, S[i].y, S[i].x + S[i].r - 2, S[i].y, 0.1), 1.2, mp, { color: INK, taper: 0 });
-    }
+    // the scan, and the coloured traces it leaves behind
+    var counted = { intact: 0, cracked: 0, fragmented: 0, edge: 0 }, done = 0;
+    F.all.forEach(function (f) {
+      var poly = f.trace || f.poly, at = m0 + clamp01((f.x - MX) / MS) * mDur, tp = prog(t, at, 0.35);
+      brush(poly.concat([poly[0]]), 2, tp, { color: statusColor(f.status), taper: 0.02, boil: 0.5 });
+      if (tp >= 1) { counted[f.status]++; done++; }
+    });
     var sweep = prog(t, m0, mDur);
     if (sweep > 0 && sweep < 1) {
-      ctx.save();
-      ctx.beginPath(); ctx.arc(cx, cy, 210, 0, Math.PI * 2); ctx.clip();
-      ctx.globalAlpha = 0.5; ctx.fillStyle = PAPER;
-      ctx.fillRect(lerp(cx - 210, cx + 210, sweep), cy - 210, 2, 420);
-      ctx.restore();
+      ctx.globalAlpha = 0.55; ctx.fillStyle = PAPER;
+      ctx.fillRect(lerp(MX, MX + MS, sweep), MY, 2, MS);
       ctx.globalAlpha = 1;
     }
+    ctx.restore();
+    brush(rectPts(MX, MY, MS, MS, 0.4), 1.4, ma, { taper: 0.02, alpha: 0.8 });
 
-    var ta = prog(t, 2.4, 0.4);
-    fill(rectPts(722, 112, 168, 104, 0.8), PAPER, ta);
-    brush(rectPts(716, 106, 180, 116, 0.8), 1.4, ta, { taper: 0.04 });
-    hand("n = " + count, 742, 157, 36, INK, "left", ta);
-    hand(Math.min(15, Math.round(sweep * 15)) + " s", 742, 198, 28, INK, "left", ta);
+    // the side panel: how many, and what state they're in
+    var pa = prog(t, 1.6, 0.5), total = F.all.length, px = 840, pw = 84;
+    hand("frustules", px, 106, 17, PAPER, "left", pa * 0.75);
+    hand(String(Math.round((136 * done) / total)), px, 150, 42, PAPER, "left", pa);
+    brush(seg(px, 186, px + pw, 186, 0.1), 9, pa, { alpha: 0.18, taper: 0, still: true });
+    var bx = px;
+    ctx.globalAlpha = pa;
+    ["intact", "cracked", "fragmented", "edge"].forEach(function (s) {
+      var bw = (pw * counted[s]) / total;
+      ctx.fillStyle = statusColor(s);
+      ctx.fillRect(bx, 182, bw, 8);
+      bx += bw;
+    });
+    ctx.globalAlpha = 1;
+    [["intact", "intact"], ["cracked", "cracked"], ["fragmented", "fragmented"], ["edge", "cut by edge"]].forEach(function (s, k) {
+      var ly = 216 + k * 22;
+      fill(circlePts(px + 5, ly - 5, 4.5, 0.1), statusColor(s[0]), pa);
+      hand(s[1], px + 16, ly, 15, PAPER, "left", pa * 0.85);
+    });
+    hand("sample", px, 340, 14, PAPER, "left", pa * 0.6);
+    hand("didymo", px, 362, 22, PAPER, "left", pa * prog(t, m0 + mDur * 0.5, 0.4));
+    hand(Math.min(15, Math.round(sweep * 15)) + " s", px, 410, 22, PAPER, "left", pa * 0.8);
   }
 
   // ---------------------------------------------------------------- scene 7: the road on
@@ -882,54 +971,124 @@
     }), wob);
   }
 
-  function sCards(t) {
-    brush(seg(40, 440, 920, 440, 0.8), 3, prog(t, 0.2, 1), { taper: 0.05 });
-    var back1 = rotRect(430, 262, 270, 176, -0.16, 0.8), back2 = rotRect(530, 258, 270, 176, 0.13, 0.8);
-    fill(back1, PAPER, prog(t, 0.4, 0.4) * 0.45);
-    brush(back1, 2, prog(t, 0.4, 0.8), { taper: 0.03 });
-    fill(back2, PAPER, prog(t, 0.6, 0.4) * 0.7);
-    brush(back2, 2, prog(t, 0.6, 0.8), { taper: 0.03 });
+  // Drawn after the Nepalingo app: a dark screen with the "Nepal·ingo" logo, a greeting and a streak badge,
+  // an indigo flashcard that flips to its meaning, a multiple-choice quiz, the floral activity cards on the
+  // home page, and the crimson bird mascot. Eleven merged pull requests run along the bottom.
+  var N_RED = "#d8364a", N_BLUE = "#4a42d4", N_GREEN = "#6dbb73";
+  var N_FLOWERS = ["#c8743a", "#2f8f8a", "#b8443c", "#d9a441"];
+  function rectLine(x, y, w, h, n) {   // a rectangle as a fixed number of points (no randomness), for shapes that change size
+    var pts = [], c = [[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]];
+    for (var e = 0; e < 4; e++) for (var i = 0; i < n; i++) pts.push([lerp(c[e][0], c[e + 1][0], i / n), lerp(c[e][1], c[e + 1][1], i / n)]);
+    pts.push([x, y]);
+    return pts;
+  }
 
-    // the daily quiz
-    var qa = prog(t, 2.4, 0.5);
-    brush(rectPts(770, 120, 150, 180, 0.6), 2.2, qa, { taper: 0.03 });
-    for (var q = 0; q < 3; q++) {
-      brush(circlePts(798, 166 + q * 44, 9, 0.2), 1.8, prog(t, 2.6 + q * 0.15, 0.3), { taper: 0.05 });
-      brush(seg(818, 166 + q * 44, 894, 166 + q * 44, 0.3), 2.2, prog(t, 2.7 + q * 0.15, 0.3), {});
-    }
-    brush(path([[789, 208], [797, 218], [812, 196]], 0.2), 3, prog(t, 3.4, 0.3), { taper: 0.1 });
+  function sCards(t) {
+    var i;
+    // the mascot: Nepalingo's crimson bird, on a pale pink blob like the login page
+    var ba = prog(t, 0.3, 0.8), bx = 236, by = 500;
+    function B(p) { return [bx + p[0], by + p[1]]; }
+    brush(seg(40, 500, 440, 500, 0.6), 2, prog(t, 0.1, 0.8), { alpha: 0.7 });
+    fill(blobPts(bx - 6, by - 104, 96, 82, 2, 3, 30), "#f2b8c6", ba * 0.3);
+    brush(seg(bx - 12, by - 52, bx - 14, by - 4, 0.3), 5, ba, { color: N_RED });                       // legs
+    brush(seg(bx + 8, by - 52, bx + 10, by - 4, 0.3), 5, ba, { color: N_RED });
+    brush(seg(bx - 26, by - 2, bx - 4, by - 2, 0.2), 4, ba, { color: PAPER, alpha: 0.8 });
+    brush(seg(bx - 2, by - 2, bx + 20, by - 2, 0.2), 4, ba, { color: PAPER, alpha: 0.8 });
+    fill(blobPts(bx - 4, by - 80, 44, 32, 2, 3, 26), N_RED, ba);                                     // body
+    fill(closed([[-46, -80], [-24, -100], [10, -100], [30, -84], [4, -68], [-28, -66]].map(B), 0.5), "#3a1418", ba);   // wing
+    brush(path([[10, -98], [16, -122], [22, -140]].map(B), 0.4), 18, ba, { color: N_RED, taper: 0 });   // neck
+    fill(circlePts(bx + 22, by - 152, 19, 0.3), N_RED, ba);                                           // head
+    fill(closed([[38, -156], [58, -148], [38, -140]].map(B), 0.2), "#a82434", ba);                  // beak
+    for (i = 0; i < 3; i++) brush(path([[14 - i * 4, -168], [4 - i * 8, -184 + i * 4], [-6 - i * 10, -188 + i * 8]].map(B), 0.3), 1.6, prog(t, 0.9 + i * 0.1, 0.4), { color: PAPER, alpha: 0.8, taper: 0.3 });
+    fill(circlePts(bx + 28, by - 156, 9, 0.1), PAPER, ba);                                           // the big eye
+    var look = reduceMotion ? 0 : Math.sin(t * 0.9) * 2.5;
+    fill(circlePts(bx + 30 + look, by - 156, 4.5, 0.05), INK, ba);
+
+    // the app window
+    var wa = prog(t, 0.1, 0.8);
+    fill(rectPts(480, 36, 456, 404, 0.6), "#171614", wa, { still: true });
+    brush(rectPts(480, 36, 456, 404, 0.8), 2, wa, { taper: 0.02 });
+    brush(seg(480, 76, 936, 76, 0.4), 1.4, wa, { alpha: 0.6 });
+    ctx.font = "700 22px " + HAND;
+    hand("Nepal", 498, 64, 22, PAPER, "left", wa);
+    hand("ingo", 498 + ctx.measureText("Nepal").width, 64, 22, N_RED, "left", wa);
+    brush(rectPts(852, 48, 66, 20, 0.3), 1.2, wa, { taper: 0.03, alpha: 0.7 });
+    hand("newari ▾", 860, 63, 13, PAPER, "left", wa * 0.85);
+
+    // greeting and the streak badge
+    var ga = prog(t, 0.6, 0.4);
+    hand("good evening!", 500, 104, 17, PAPER, "left", ga);
+    fill(rectPts(794, 88, 124, 24, 0.3), N_RED, ga);
+    hand("keep going!", 806, 105, 14, PAPER, "left", ga);
+
+    // the quiz
+    var qa = prog(t, 1.4, 0.5);
+    brush(rectPts(676, 122, 244, 200, 0.5), 1.4, qa, { taper: 0.03, alpha: 0.5 });
+    hand("section · introductions", 798, 144, 14, N_RED, "center", qa);
+    hand("progress: 1 of 24", 798, 162, 12, N_GREEN, "center", qa);
+    hand("what is this word in english?", 798, 194, 15, PAPER, "center", qa);
+    hand("नमस्कार", 798, 226, 24, N_RED, "center", qa);
+    var picked = prog(t, 4.6, 0.3);
+    [["a. hello", 690, 240], ["b. bye", 802, 240], ["c. no", 690, 278], ["d. today", 802, 278]].forEach(function (o, k) {
+      var oa = prog(t, 1.8 + k * 0.12, 0.3);
+      fill(rectPts(o[1], o[2], 104, 30, 0.3), N_GREEN, k === 0 ? picked * 0.35 : 0);
+      brush(rectPts(o[1], o[2], 104, 30, 0.3), 1.3, oa, { color: k === 0 && picked > 0 ? N_GREEN : PAPER, taper: 0.03, alpha: 0.8 });
+      hand(o[0], o[1] + 52, o[2] + 20, 14, PAPER, "center", oa);
+    });
+
+    // the activity cards on the home page, with their floral pattern
+    [["flash cards", 500], ["dictionary", 640], ["test yourself", 780]].forEach(function (c, k) {
+      var aa = prog(t, 2.2 + k * 0.15, 0.4), cx0 = c[1];
+      fill(rectPts(cx0, 362, 132, 64, 0.3), "#24221f", aa);
+      for (var f = 0; f < 4; f++) {
+        var fx = cx0 + 18 + f * 32 + (f % 2) * 6, fy = 378 + (f % 2) * 18, col = N_FLOWERS[(f + k) % 4];
+        for (var pe = 0; pe < 5; pe++) {
+          var ang = (pe / 5) * Math.PI * 2;
+          fill(circlePts(fx + Math.cos(ang) * 6, fy + Math.sin(ang) * 6, 4.5, 0.1), col, aa * 0.55);
+        }
+        fill(circlePts(fx, fy, 3, 0.1), "#e8d9a0", aa * 0.6);
+      }
+      brush(rectPts(cx0, 362, 132, 64, 0.3), 1.2, aa, { taper: 0.03, alpha: 0.7 });
+      hand(c[0], cx0 + 8, 418, 13, PAPER, "left", aa);
+      fill(rectPts(cx0 + 92, 404, 32, 16, 0.2), N_RED, aa);
+    });
 
     // eleven merged pull requests
-    brush(seg(190, 492, 790, 492, 0.4), 2, prog(t, 2.8, 1.2), {});
+    brush(seg(500, 492, 920, 492, 0.4), 2, prog(t, 2.8, 1.2), {});
     for (var m = 0; m < 11; m++) {
-      var mx = 214 + m * 54, mp = prog(t, 3.0 + m * 0.12, 0.25);
-      brush(path([[mx - 28, 468], [mx - 10, 471], [mx, 488]], 0.2), 1.6, mp, { alpha: 0.8 });
-      fill(circlePts(mx, 492, 5, 0.2), PAPER, mp);
+      var mx = 516 + m * 38, mp = prog(t, 3.0 + m * 0.12, 0.25);
+      brush(path([[mx - 22, 470], [mx - 8, 473], [mx, 488]], 0.2), 1.6, mp, { alpha: 0.8 });
+      fill(circlePts(mx, 492, 4.5, 0.2), PAPER, mp);
     }
 
-    // the front card flips over (its width changes, so it comes late)
-    var fp = prog(t, 3.4, 0.6), sx = Math.abs(Math.cos(fp * Math.PI)), showBack = fp > 0.5;
-    var fw = 270 * Math.max(0.04, sx), ca = prog(t, 0.8, 0.4), inside = ca * (sx > 0.55 ? 1 : 0);
-    var card = closed([[480 - fw / 2, 168], [480 + fw / 2, 168], [480 + fw / 2, 346], [480 - fw / 2, 346]], 0.6);
-    fill(card, PAPER, ca);
-    brush(card, 2.6, prog(t, 0.8, 0.8), { color: INK, taper: 0.03 });
-    // front: a speaker with sound waves and a word
-    fill(closed([[420, 242], [432, 242], [448, 228], [448, 284], [432, 270], [420, 270]], 0.3), INK, showBack ? 0 : inside);
-    for (var k = 0; k < 3; k++) {
-      var pulse = reduceMotion ? 1 : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 4 - k * 0.9));
-      brush(arcPts(452, 256, 14 + k * 11, 14 + k * 11, -0.7, 0.7, 0.2), 2.4, 1, { color: INK, alpha: (showBack ? 0 : inside) * pulse, taper: 0.2 });
-    }
-    brush(path([[506, 244], [520, 238], [534, 248], [548, 238], [562, 246]], 0.4), 3.2, 1, { color: INK, alpha: showBack ? 0 : inside });
-    brush(seg(506, 272, 552, 272, 0.3), 2, 1, { color: INK, alpha: (showBack ? 0 : inside) * 0.6 });
-    // back: the meaning, written out
-    brush(path([[426, 236], [446, 230], [470, 240], [494, 230], [520, 238], [536, 232]], 0.4), 3, 1, { color: INK, alpha: showBack ? inside : 0 });
-    brush(path([[436, 268], [470, 262], [500, 270], [526, 264]], 0.4), 2.4, 1, { color: INK, alpha: (showBack ? inside : 0) * 0.7 });
+    // the flashcard's buttons: don't know / show / know it
+    var ua = prog(t, 1.2, 0.4);
+    [[552, N_RED, -1], [580, D_GREY, 0], [608, N_GREEN, 1]].forEach(function (b) {
+      fill(circlePts(b[0], 344, 11, 0.1), PAPER, ua);
+      if (b[2]) brush(path([[b[0] - 5, 344 + 3 * b[2]], [b[0], 344 - 3 * b[2]], [b[0] + 5, 344 + 3 * b[2]]], 0.1), 2.4, ua, { color: b[1], taper: 0.1 });
+      else { brush(arcPts(b[0], 344, 6, 3.5, 0, Math.PI * 2, 0.05), 1.4, ua, { color: b[1], taper: 0 }); fill(circlePts(b[0], 344, 1.8, 0.05), b[1], ua); }
+    });
 
-    // a streak flame (last: it flickers)
-    var fla = prog(t, 2.0, 0.5), fxf = 140, fyf = 262, fk = reduceMotion ? 0 : Math.sin(t * 7) * 3;
-    function F(p) { return [fxf + p[0], fyf + p[1]]; }
-    fill(closed([[4 + fk, -66], [16, -40], [26, -16], [28, 6], [18, 24], [0, 30], [-18, 24], [-28, 6], [-24, -18], [-14, -34], [-12, -20], [-4, -40]].map(F), 0.5), PAPER, fla);
-    fill(closed([[2 - fk * 0.4, -30], [12, -8], [10, 10], [0, 18], [-10, 10], [-10, -6], [-4, -2]].map(F), 0.3), INK, fla);
+    // the streak flame flickers (its shape moves, so it comes late and uses no randomness)
+    var fk = reduceMotion ? 0 : Math.sin(t * 7) * 1.5;
+    fill([[908 + fk, 91], [914, 98], [915, 105], [908, 110], [901, 105], [903, 97]], "#ffd27a", ga);
+
+    // the flashcard flips over (its width changes, so it comes last and uses no randomness)
+    var fp = prog(t, 3.2, 0.6), sx = Math.abs(Math.cos(fp * Math.PI)), showBack = fp > 0.5;
+    var fw = 140 * Math.max(0.04, sx), ca = prog(t, 0.8, 0.4), inside = ca * (sx > 0.55 ? 1 : 0);
+    var card = rectLine(580 - fw / 2, 122, fw, 196, 8);
+    if (!showBack) {
+      fill(card, N_BLUE, ca);
+      hand("do", 580, 232, 40, PAPER, "center", inside);
+    } else {
+      fill(card, PAPER, ca);
+      fill(rectLine(580 - fw / 2, 122, fw, 64, 8), N_BLUE, ca);
+      hand("do", 580, 156, 26, PAPER, "center", inside);
+      hand("याये", 580, 178, 15, PAPER, "center", inside);
+      hand("newari: याये", 580, 236, 15, INK, "center", inside);
+      hand("english: do", 580, 258, 15, INK, "center", inside);
+    }
+    brush(card, 1.6, prog(t, 0.8, 0.6), { taper: 0.02, alpha: 0.6 });
   }
 
   // ---------------------------------------------------------------- summer 2026: Thoreau's cabin (walden.life) and an answer sheet (SATitude)
@@ -1120,6 +1279,14 @@
     penguin(530, 380, 1.1, t, pa, flap * trying, hop);
   }
 
+  // ---------------------------------------------------------------- scene: behind a section's gallery, a quiet night
+  function sGallery(t) {
+    stars(60, 0, 0, W, 420, t, 0);
+    fill(circlePts(860, 80, 20, 0.4), PAPER, prog(t, 0.3, 0.6));
+    fill(circlePts(870, 74, 18, 0.4), INK, prog(t, 0.3, 0.6));
+    brush(path([[0, 470], [160, 452], [330, 462], [520, 446], [700, 458], [860, 448], [960, 456]], 0.8), 2, prog(t, 0.2, 1.2), { alpha: 0.7 });
+  }
+
   // ---------------------------------------------------------------- the film: shots and their words
   // The main story is just my life. At the end, viewers choose what to see next: each choice is its own
   // short film ("track") that returns to the choices when it ends.
@@ -1130,7 +1297,7 @@
     pokhara: { draw: sPokhara, seed: 11, anchor: "tl", enter: "wipe",
       lines: ["i grew up in pokhara, nepal.", "under machhapuchhre, the “fish tail” mountain."] },
     school: { draw: sSchool, seed: 22, anchor: "tc", enter: "pan",
-      lines: ["budhanilkantha school, kathmandu.", "a levels in physics, chemistry, computer science and math. A* in all four.", "valedictorian. 1600 on the sat."] },
+      lines: ["budhanilkantha school, kathmandu.", "A Levels: Physics (A*) Chemistry (A*) Computer Science (A*) Mathematics (A*)", "valedictorian. 1600 on the sat."] },
     lexington: { draw: sLexington, seed: 55, anchor: "tl", enter: "rise",
       lines: ["august 2026: about 12,000 km later.", "washington and lee university, lexington, virginia.", "a math + cs double major, on a full-ride scholarship."] },
     today: { draw: sEnd, seed: 77, anchor: "tl", enter: "wipe",
@@ -1146,6 +1313,28 @@
         { label: "github ↗", href: "https://github.com/sirElvinn", aria: "Aditya on GitHub", ext: true },
         { label: "linkedin ↗", href: "https://www.linkedin.com/in/aditya-thakur-a76501266/", aria: "Aditya on LinkedIn", ext: true },
         { label: "watch again ↺", restart: true, aria: "Watch the story again from the start" }
+      ] },
+
+    // Each section opens on a gallery: its stories hang as small ink pictures, and a click opens one.
+    // "items" lists the shots in the gallery and the label under each picture.
+    projects: { draw: sGallery, seed: 150, anchor: "tc",
+      lines: ["things i’ve built.", "pick one to know more."],
+      items: [
+        { id: "diatometer", label: "diatometer", aria: "Open DiatoMeter" },
+        { id: "summer-builds", label: "walden.life + satitude", aria: "Open walden.life and SATitude" }
+      ] },
+    experience: { draw: sGallery, seed: 151, anchor: "tc",
+      lines: ["where i’ve learned and worked.", "pick one to know more."],
+      items: [
+        { id: "courses", label: "courses · 2025", aria: "Open my 2025 courses" },
+        { id: "nepalingo", label: "nepalingo · 2024", aria: "Open Nepalingo" },
+        { id: "lipi-ai", label: "lipi ai · 2023", aria: "Open Lipi AI" }
+      ] },
+    words: { draw: sGallery, seed: 152, anchor: "tc",
+      lines: ["words that give meaning to my life.", "pick one."],
+      items: [
+        { id: "walden", label: "thoreau", aria: "Open the Thoreau quote" },
+        { id: "penguins", label: "penguins on the ice", aria: "Open the penguin quote" }
       ] },
 
     // projects
@@ -1181,29 +1370,42 @@
 
     // words that give meaning to my life
     walden: { draw: sWoods, seed: 130, anchor: "tc",
-      lines: ["words that give meaning to my life.",
-        "“i went to the woods because i wanted to live deliberately. i wanted to live deep and suck out all the marrow of life,",
+      lines: [[
+        "“i went to the woods because i wanted to live deliberately.",
+        "i wanted to live deep and suck out all the marrow of life,",
         "to put to rout all that was not life, and not, when i had come to die, discover that i had not lived.”",
-        "henry david thoreau, as read in dead poets society."] },
+        "\n— henry david thoreau, as read in dead poets society."]] },
     penguins: { draw: sPenguins, seed: 140, anchor: "tc",
-      lines: ["“she said we are penguins on the ice.", "we’re not meant to fly,", "but god knows we can try.”"] },
+      lines: [["“she said we are penguins on the ice.", "\nwe’re not meant to fly,", "\nbut god knows we can try.”"]] },
 
     // résumé
     resume: { draw: sResume, seed: 120, anchor: "tl",
       lines: ["the one-page version.", "education, projects, experience and skills."],
       links: [{ label: "open the pdf ↗", href: "assets/aditya-thakur-resume.pdf", aria: "Open Aditya's résumé (PDF)", ext: true }] }
   };
-  Object.keys(SHOT).forEach(function (id) { SHOT[id].id = id; });
+  // A line written as a list is ONE box that grows: each part is its own click, typed into the same box.
+  // Parts run on after a space; a part that starts with "\n" starts a new line inside the box.
+  Object.keys(SHOT).forEach(function (id) {
+    var s = SHOT[id], flat = [], box = [], sep = [];
+    s.lines.forEach(function (ln, b) {
+      [].concat(ln).forEach(function (part, j) {
+        sep.push(j === 0 ? "" : part.charAt(0) === "\n" ? "\n" : " ");
+        flat.push(part.replace(/^\n/, ""));
+        box.push(b);
+      });
+    });
+    s.id = id; s.lines = flat; s.box = box; s.sep = sep;
+  });
 
   var TRACKS = {
     main: ["title", "pokhara", "school", "lexington", "today"],
-    projects: ["diatometer", "summer-builds"],
-    experience: ["courses", "nepalingo", "lipi-ai"],
-    words: ["walden", "penguins"],
+    projects: ["projects", "diatometer", "summer-builds"],
+    experience: ["experience", "courses", "nepalingo", "lipi-ai"],
+    words: ["words", "walden", "penguins"],
     resume: ["resume"]
   };
   var MENU = "today";
-  var ALIASES = { contact: "today", menu: "today", projects: "diatometer", experience: "courses", words: "walden", quotes: "walden" };
+  var ALIASES = { contact: "today", menu: "today", quotes: "words" };
 
   function locate(id) {
     id = ALIASES[id] || id;
@@ -1269,10 +1471,11 @@
 
   // ---------------------------------------------------------------- state
   var track = "main", pos = 0, shot = SHOT.title, beat = 0, shotStart = 0, lineStarts = [], trans = null;
-  var TYPE_CPS = 45, CAPTION_DELAY = 650;
+  var TYPE_CPS = 45, CAPTION_DELAY = 650, GROW_MS = 320;
 
+  function typeDelay(k) { return shot.sep[k] ? GROW_MS : 0; }
   function typedDone(k, now) {
-    return now - lineStarts[k] >= (shot.lines[k].length / TYPE_CPS) * 1000;
+    return now - lineStarts[k] >= typeDelay(k) + (shot.lines[k].length / TYPE_CPS) * 1000;
   }
 
   // full = arrive with everything already drawn and written (going back, or returning to the choices)
@@ -1305,6 +1508,10 @@
   }
 
   function startTrack(name) { go(name, 0, 1, "zoom", false); }
+  // Inside a section that opens on a gallery, each item is its own little film that returns to the gallery.
+  function inItem() { return track !== "main" && pos > 0 && !!SHOT[TRACKS[track][0]].items; }
+  function openItem(id) { var at = locate(id); if (at) go(at.track, at.pos, 1, "zoom", false); }
+  function backToGallery(dir) { go(track, 0, dir, "zoom", true); }
   function backToChoices(dir) { go("main", TRACKS.main.indexOf(MENU), dir, "wipe", true); }
   function restart() { trans = null; go("main", 0, 1, "wipe", false); }
 
@@ -1317,6 +1524,8 @@
     }
     if (typing) { announce(); return; }
     if (beat < shot.lines.length) { lineStarts[beat] = now; beat++; announce(); return; }
+    if (shot.items) return;              // a gallery waits for a pick
+    if (inItem()) { backToGallery(-1); return; }
     var list = TRACKS[track];
     if (pos < list.length - 1) {
       var nextShot = SHOT[list[pos + 1]];
@@ -1330,6 +1539,7 @@
   function prev() {
     if (trans) trans = null;
     if (!shot.auto && beat > 1) { beat--; announce(); return; }
+    if (inItem()) { backToGallery(-1); return; }
     if (pos > 0) { go(track, pos - 1, -1, track === "main" ? shot.enter : "pan", true); return; }
     if (track !== "main") backToChoices(-1);
   }
@@ -1339,25 +1549,34 @@
 
   function wrap(text, maxW, size) {
     main.font = HAND_FONT(size);
-    var words = text.split(" "), lines = [], line = "";
-    for (var i = 0; i < words.length; i++) {
-      var test = line ? line + " " + words[i] : words[i];
-      if (line && main.measureText(test).width > maxW) { lines.push(line); line = words[i]; }
-      else line = test;
-    }
-    if (line) lines.push(line);
+    var lines = [];
+    text.split("\n").forEach(function (para) {
+      var words = para.split(" "), line = "";
+      for (var i = 0; i < words.length; i++) {
+        var test = line ? line + " " + words[i] : words[i];
+        if (line && main.measureText(test).width > maxW) { lines.push(line); line = words[i]; }
+        else line = test;
+      }
+      lines.push(line);
+    });
     var w = 0;
     lines.forEach(function (l) { w = Math.max(w, main.measureText(l).width); });
     return { lines: lines, w: w };
   }
 
-  function stack(texts, size, anchor, big) {
+  // grow (optional): { box, prev, u } eases box number `box` from the size of text `prev` to its full size
+  function stack(texts, size, anchor, big, grow) {
     var gap = size * 0.75, m = size * 0.95;
     var maxW = portrait ? VW - 32 - size * 1.5 : film.w * (anchor === "tc" ? 0.62 : 0.46);
     var boxes = texts.map(function (tx, k) {
       var sz = big && k === 0 ? size * 1.5 : size, px = sz * 0.75, py = sz * 0.5, lh = sz * 1.22;
-      var r = wrap(tx, maxW, sz);
-      return { lines: r.lines, w: r.w + px * 2, h: r.lines.length * lh + py * 2 - lh * 0.18, padX: px, padY: py, lineH: lh, size: sz };
+      var r = wrap(tx, maxW, sz), w = r.w + px * 2, h = r.lines.length * lh + py * 2 - lh * 0.18;
+      if (grow && grow.box === k && grow.u < 1) {
+        var r0 = wrap(grow.prev, maxW, sz), e = easeOut(grow.u);
+        w = lerp(r0.w + px * 2, w, e);
+        h = lerp(r0.lines.length * lh + py * 2 - lh * 0.18, h, e);
+      }
+      return { lines: r.lines, w: w, h: h, padX: px, padY: py, lineH: lh, size: sz };
     });
     var total = boxes.reduce(function (a, b) { return a + b.h; }, 0) + gap * Math.max(0, boxes.length - 1);
     var y = portrait ? film.y + film.h + 22
@@ -1409,16 +1628,31 @@
   function drawCaptions(now, fade) {
     ctx = main;
     main.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var texts = shot.lines.slice(0, beat);
-    var st = stack(texts, capSize, shot.anchor, shot.auto);
-    st.boxes.forEach(function (b, k) {
-      var since = now - lineStarts[k];
+    var texts = [], parts = [], grow = null;   // per box: its text so far, and which beats are in it
+    for (var k = 0; k < beat; k++) {
+      var bi = shot.box[k];
+      if (texts[bi] == null) { texts[bi] = shot.lines[k]; parts[bi] = [k]; continue; }
+      if (now - lineStarts[k] < GROW_MS) grow = { box: bi, prev: texts[bi], u: Math.max(0, now - lineStarts[k]) / GROW_MS };
+      texts[bi] += shot.sep[k] + shot.lines[k];
+      parts[bi].push(k);
+    }
+    var st = stack(texts, capSize, shot.anchor, shot.auto, reduceMotion ? null : grow);
+    st.boxes.forEach(function (b, bi) {
+      var since = now - lineStarts[parts[bi][0]];
       if (since < 0) return;
-      var a = clamp01(since / 260) * fade;
-      var chars = reduceMotion ? null : Math.floor((since / 1000) * TYPE_CPS);
-      drawBox(b, k + shot.seed * 10, a, chars);
+      var a = clamp01(since / 260) * fade, chars = null;
+      if (!reduceMotion) {
+        chars = 0;
+        for (var j = 0; j < parts[bi].length; j++) {
+          var kk = parts[bi][j], typed = Math.floor(((now - lineStarts[kk] - typeDelay(kk)) / 1000) * TYPE_CPS);
+          if (typed < shot.lines[kk].length) { chars += Math.max(0, typed); break; }
+          chars += shot.lines[kk].length + 1;
+        }
+      }
+      drawBox(b, bi + shot.seed * 10, a, chars);
     });
     hits = [];
+    if (beat >= shot.lines.length && shot.items) drawGallery(st.bottom + capSize * 0.9, lineStarts[shot.lines.length - 1], now, fade);
     if (beat >= shot.lines.length && (shot.choices || shot.links)) {
       var lastStart = lineStarts[shot.lines.length - 1];
       var x0 = st.boxes.length ? st.boxes[0].x : film.x + 20;
@@ -1433,6 +1667,82 @@
         boxRow(shot.links, "link", x0, y, capSize * 0.86, maxX, lastStart + (shot.choices ? 1100 : 500), now, fade, 900);
       }
     }
+  }
+
+  // ---------------------------------------------------------------- a section's gallery: its stories as ink pictures pegged to a line
+  var thumbs = {}, hotKey = null, lift = {};
+  function thumbFor(id, w, h, now) {
+    var T = thumbs[id] || (thumbs[id] = { c: document.createElement("canvas"), boil: -1 });
+    var pw = Math.max(1, Math.round(w * dpr)), ph = Math.max(1, Math.round(h * dpr));
+    if (T.c.width !== pw || T.c.height !== ph) { T.c.width = pw; T.c.height = ph; T.boil = -1; }
+    if (T.boil !== boil) {   // redrawn only when the ink "boils", about 8 times a second
+      renderScene(SHOT[id], reduceMotion ? 60 : 60 + now / 1000, T.c.getContext("2d"), pw);
+      T.boil = boil;
+    }
+    return T.c;
+  }
+  function fitSize(text, maxW, size) {
+    main.font = HAND_FONT(size);
+    var w = main.measureText(text).width;
+    return w > maxW ? Math.max(10, (size * maxW) / w) : size;
+  }
+
+  function drawGallery(top, t0, now, fade) {
+    var items = shot.items, n = items.length;
+    var gap = capSize * 1.7, pinH = capSize * 0.9, labelSize = capSize * 0.86, labelH = labelSize * 1.7;
+    var ax = portrait ? 16 : film.x + capSize, aw = portrait ? VW - 32 : film.w - capSize * 2;
+    var ay = top + pinH, ah = (portrait ? VH - 44 : film.y + film.h - capSize * 0.8) - ay;
+    // pick the number of columns that gives the biggest pictures
+    var cw = 0, cols = 1;
+    for (var c = 1; c <= n; c++) {
+      var r = Math.ceil(n / c);
+      var w = Math.min((aw - gap * (c - 1)) / c, ((ah - (r - 1) * (gap + pinH)) / r - labelH) / 0.55625, portrait ? 230 : film.w * 0.3);
+      if (w > cw + 0.5) { cw = w; cols = c; }
+    }
+    var pad = cw * 0.05, iw = cw - pad * 2, ih = (iw * 9) / 16, ch = pad + ih + labelH;
+    var rows = Math.ceil(n / cols), totalH = rows * ch + (rows - 1) * (gap + pinH);
+    var y0 = ay + Math.max(0, ah - totalH) * (portrait ? 0 : 0.35);
+    var imgs = items.map(function (it) { return thumbFor(it.id, iw, ih, now); });
+    ctx = main;
+
+    for (var row = 0; row < rows; row++) {
+      var inRow = Math.min(cols, n - row * cols), rowW = inRow * cw + (inRow - 1) * gap;
+      var rx = ax + (aw - rowW) / 2, ly = y0 + row * (ch + gap + pinH) - pinH * 0.55;
+      var lx0 = rx - gap, lx1 = rx + rowW + gap, sag = capSize * 0.4;
+      var lineY = function (x) { var u = ((x - lx0) / (lx1 - lx0)) * 2 - 1; return ly + sag * (1 - u * u); };
+      var pts = [];
+      for (var s = 0; s <= 16; s++) { var lx = lerp(lx0, lx1, s / 16); pts.push([lx, lineY(lx)]); }
+      main.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sid = 65000 + row * 500; R = mulberry32(700 + row);
+      brush(path(pts, 0.4), 1.6, clamp01((now - (t0 + 250 + row * 200)) / 400), { alpha: 0.8 * fade, taper: 0.05 });
+
+      for (var j = 0; j < inRow; j++) {
+        var idx = row * cols + j, it = items[idx], key = shot.id + ":item:" + idx;
+        var px = rx + j * (cw + gap) + cw / 2, py = lineY(px), cardTop = pinH * 0.3;
+        var a = clamp01((now - (t0 + 450 + idx * 160)) / 280) * fade;
+        lift[key] = lerp(lift[key] || 0, hotKey === key ? 1 : 0, 0.3);
+        var hv = lift[key], tilt = (idx % 2 ? 1 : -1) * 0.028 * (1 - hv);
+        main.setTransform(dpr, 0, 0, dpr, 0, 0);
+        main.translate(px, py);
+        main.rotate(tilt);
+        main.scale(1 + 0.04 * hv, 1 + 0.04 * hv);
+        sid = 66000 + idx * 60; R = mulberry32(3000 + idx + shot.seed);
+        fill(rectPts(-cw / 2 - 7, cardTop - 7, cw + 14, ch + 14, 1), INK, a);
+        fill(rectPts(-cw / 2, cardTop, cw, ch, 1), PAPER, a);
+        if (a > 0) {
+          main.globalAlpha = a;
+          main.drawImage(imgs[idx], -cw / 2 + pad, cardTop + pad, iw, ih);
+          main.globalAlpha = 1;
+        }
+        brush(rectPts(-cw / 2 + pad, cardTop + pad, iw, ih, 0.6), 1.6, 1, { color: INK, taper: 0.03, alpha: a });
+        brush(rectPts(-cw / 2 - 4, cardTop - 4, cw + 8, ch + 8, 1), 1.5, 1, { taper: 0.04, alpha: a });
+        hand(it.label, 0, cardTop + pad + ih + labelH * 0.64, fitSize(it.label, iw, labelSize), INK, "center", a);
+        fill(rectPts(-5, -pinH * 0.35, 10, pinH * 0.9, 0.3), INK, a);                       // the clothespin
+        brush(rectPts(-5, -pinH * 0.35, 10, pinH * 0.9, 0.3), 1.4, 1, { taper: 0.05, alpha: a });
+        if (a > 0) hits.push({ key: key, kind: "item", item: it, x: px - cw / 2 - 8, y: py + cardTop - 8, w: cw + 16, h: ch + 16 });
+      }
+    }
+    main.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   // ---------------------------------------------------------------- the frame around the film, progress dots, edge arrows
@@ -1452,7 +1762,8 @@
 
     var list = TRACKS[track], n = list.length, gapD = 14;
     var dy = portrait ? VH - 26 : film.y + film.h + 22, x0 = VW / 2 - ((n - 1) * gapD) / 2;
-    for (var i = 0; i < n && n > 1; i++) {
+    var dots = n > 1 && !SHOT[list[0]].items;
+    for (var i = 0; i < n && dots; i++) {
       main.beginPath();
       main.arc(x0 + i * gapD, dy, i === pos ? 3.6 : 2.6, 0, Math.PI * 2);
       main.globalAlpha = i === pos ? 0.95 : 0.35;
@@ -1461,7 +1772,7 @@
     }
     main.globalAlpha = 1;
 
-    var atChoices = shot.id === MENU && beat >= shot.lines.length;
+    var atChoices = (shot.id === MENU || !!shot.items) && beat >= shot.lines.length;
     var showNext = !atChoices && ((hover === "next") || (shot.id === "title" && !reduceMotion));
     var canBack = pos > 0 || track !== "main";
     var showPrev = hover === "prev" && canBack;
@@ -1553,12 +1864,12 @@
   function hitEl(h) {
     if (hitEls[h.key]) return hitEls[h.key];
     var el, it = h.item;
-    if (h.kind === "choice" || it.restart) {
+    if (h.kind === "choice" || h.kind === "item" || it.restart) {
       el = document.createElement("button");
       el.type = "button";
       el.addEventListener("click", function (ev) {
         ev.stopPropagation();
-        if (it.restart) restart(); else startTrack(it.track);
+        if (it.restart) restart(); else if (h.kind === "item") openItem(it.id); else startTrack(it.track);
         filmCanvas.focus();
       });
     } else {
@@ -1568,6 +1879,9 @@
     }
     el.className = "film-link";
     el.setAttribute("aria-label", it.aria || it.label);
+    var on = function () { hotKey = h.key; }, off = function () { if (hotKey === h.key) hotKey = null; };
+    el.addEventListener("pointerenter", on); el.addEventListener("focus", on);
+    el.addEventListener("pointerleave", off); el.addEventListener("blur", off);
     document.body.appendChild(el);
     return (hitEls[h.key] = el);
   }
@@ -1589,6 +1903,7 @@
     if (!live) return;
     var extra = "";
     if (beat >= shot.lines.length) {
+      if (shot.items) extra += " Pictures: " + shot.items.map(function (c) { return c.aria; }).join(", ") + ".";
       if (shot.choices) extra += " Choices: " + shot.choices.map(function (c) { return c.aria; }).join(", ") + ".";
       if (shot.links) extra += " Links: " + shot.links.map(function (l) { return l.aria; }).join(", ") + ".";
     }
@@ -1615,6 +1930,7 @@
     if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter" || e.key === "PageDown") { e.preventDefault(); next(); }
     else if (e.key === "ArrowLeft" || e.key === "PageUp" || e.key === "Backspace") { e.preventDefault(); prev(); }
     else if (e.key === "Home") { e.preventDefault(); restart(); }
+    else if (e.key === "Escape" && inItem()) { e.preventDefault(); backToGallery(-1); }
     else if (e.key === "Escape" && track !== "main") { e.preventDefault(); backToChoices(-1); }
   });
   window.addEventListener("wheel", function (e) {
@@ -1650,6 +1966,6 @@
   // For checking by hand from the browser console: filmDebug.show("diatometer") jumps to a shot, fully drawn.
   window.filmDebug = {
     show: function (id) { var at = locate(id); if (at) { trans = null; enterShot(at.track, at.pos, performance.now(), true); } },
-    track: startTrack, next: next, prev: prev
+    track: startTrack, open: openItem, next: next, prev: prev
   };
 })();
