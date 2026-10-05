@@ -3,9 +3,12 @@
 adthakur.com is one full screen: a short film, drawn live in the browser with JavaScript "brush strokes"
 (no images, no video). The viewer drives it. A click, tap, swipe or the arrow keys reveal the next caption,
 and after a shot's last caption the camera moves to the next shot. All words appear only in the
-handwritten caption boxes. The last shot has clickable boxes for email, GitHub, LinkedIn and the résumé.
+handwritten caption boxes.
 
-There is no framework and no build step, so what you see in these files is exactly what the browser gets.
+The main story is just my life: Pokhara, Budhanilkantha School, moving to Lexington for Washington and Lee.
+It ends on a choice: **projects**, **experience** or **résumé**, plus email, GitHub and LinkedIn. Each choice
+plays its own short film and then comes back to the choices, so nobody has to sit through projects they
+didn't ask for.
 
 ## What's in the folder
 
@@ -21,17 +24,23 @@ There is no framework and no build step, so what you see in these files is exact
 
 ## Changing the words
 
-Open `film.js` and find `SHOTS` near the bottom. Each shot has an `id`, the scene it draws, where its caption
-boxes sit (`anchor`: `tl` top-left, `tr`, `bl`, `br`, or `tc` top-center), how the camera arrives (`enter`:
-`pan`, `rise`, `zoom` or `wipe`), and its `lines`, the caption boxes in order. Keep each line short; long lines
-wrap onto two lines inside the box. If you change the story, update the hidden text version in `index.html` too.
+Open `film.js` and find `SHOT` near the bottom. Each shot has the scene it draws, where its caption boxes sit
+(`anchor`: `tl` top-left, `tr`, `bl`, `br`, or `tc` top-center), its `lines` (the caption boxes, in order), and
+optionally `links` (clickable boxes such as "visit ↗") and `choices` (boxes that start another section).
 
-You can link straight to a shot with its id, for example https://adthakur.com/#diatometer.
+`TRACKS`, just below, sets the order: `main` is the life story, and `projects`, `experience` and `resume` are
+the sections viewers can choose at the end. To add a section (say, favorite quotations), add its shots to
+`SHOT`, list them in a new track, and add a choice for it in the `today` shot. Keep each line short; long
+lines wrap inside the box. If you change the story, update the hidden text version in `index.html` too.
+
+You can link straight to a shot or a section, for example https://adthakur.com/#diatometer or
+https://adthakur.com/#projects.
 
 ## Controls
 
 - Next: click or tap (anywhere but the left edge), swipe left, or press → / Space / Enter.
 - Back: click the left edge, swipe right, or press ←.
+- Back to the choices from inside a section: Escape (or ← at a section's first shot).
 - Start over: Home, or the "watch again" box at the end.
 
 ## See it on your own computer

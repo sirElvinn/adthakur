@@ -3,6 +3,7 @@
 //
 // How it plays: the viewer drives it. A click, tap, swipe or the arrow keys reveal the next caption;
 // after a shot's last caption the camera moves on to the next shot. All words live in the caption boxes.
+// The main story is just my life; at the end, viewers choose projects, experience or the résumé.
 //
 // How the ink look works, in plain terms:
 //   1. Every line starts as a list of points with a little random wobble, like a shaky hand.
@@ -13,7 +14,7 @@
 //   4. About eight times a second every point is nudged slightly. That shimmer ("line boil") is
 //      what makes hand-drawn animation feel alive.
 //
-// The words are in SHOTS near the bottom. Change them there.
+// The words are in SHOT near the bottom, and the order of shots is in TRACKS. Change them there.
 
 (function () {
   "use strict";
@@ -979,38 +980,118 @@
     brush(smoke, 2, prog(t, 1.6, 0.8), { alpha: 0.7, taper: 0.4, still: true });
   }
 
-  // ---------------------------------------------------------------- the film: shots and their caption lines
-  // "enter" is the camera move used to arrive at that shot.
-  var SHOTS = [
-    { id: "title", draw: sTitle, seed: 101, anchor: "tc", auto: true, enter: null,
+  // ---------------------------------------------------------------- scene: the résumé on a desk
+  function sResume(t) {
+    brush(seg(40, 476, 920, 476, 0.8), 3, prog(t, 0.2, 1), { taper: 0.05 });
+    var ang = -0.05, ca = Math.cos(ang), sa = Math.sin(ang);
+    function S(x, y) { return [470 + x * ca - y * sa, 268 + x * sa + y * ca]; }
+    function line(x1, y1, x2, y2, w, p, al) {
+      var A = S(x1, y1), B = S(x2, y2);
+      brush(seg(A[0], A[1], B[0], B[1], 0.3), w, p, { color: INK, taper: 0.1, alpha: al == null ? 1 : al });
+    }
+    var sheet = closed([S(-150, -196), S(150, -196), S(150, 196), S(-150, 196)], 0.8);
+    fill(sheet, PAPER, prog(t, 0.4, 0.5));
+    line(-84, -166, 84, -166, 7, prog(t, 0.9, 0.4));
+    line(-64, -146, 64, -146, 1.8, prog(t, 1.1, 0.3), 0.7);
+    var y = -118, sections = [3, 4, 3, 2];
+    sections.forEach(function (n, k) {
+      line(-126, y, -56, y, 3.6, prog(t, 1.3 + k * 0.45, 0.3));
+      line(-126, y + 8, 126, y + 8, 1, prog(t, 1.35 + k * 0.45, 0.3), 0.5);
+      for (var i = 0; i < n; i++) {
+        var yy = y + 22 + i * 14, len = 140 + R() * 96, bp = prog(t, 1.45 + k * 0.45 + i * 0.07, 0.25);
+        var d = S(-118, yy);
+        fill(circlePts(d[0], d[1], 2, 0.1), INK, bp);
+        line(-108, yy, -108 + len, yy, 1.6, bp, 0.75);
+      }
+      y += 34 + n * 14;
+    });
+    brush(path([[650, 440], [770, 336]], 0.3), 9, prog(t, 2.8, 0.5), { taper: 0.15 });   // a pen
+    brush(seg(650, 440, 638, 454, 0.2), 3, prog(t, 3.2, 0.2), {});
+    brush(seg(752, 352, 764, 364, 0.1), 1.6, prog(t, 3.2, 0.2), { color: INK, taper: 0 });
+  }
+
+  // ---------------------------------------------------------------- the film: shots and their words
+  // The main story is just my life. At the end, viewers choose what to see next: each choice is its own
+  // short film ("track") that returns to the choices when it ends.
+  // "enter" is the camera move used to arrive at a shot in the main story.
+  var SHOT = {
+    title: { draw: sTitle, seed: 101, anchor: "tc", auto: true,
       lines: ["aditya bikram thakur.", "math + cs at washington and lee.", "click, tap or press → to begin."] },
-    { id: "pokhara", draw: sPokhara, seed: 11, anchor: "tl", enter: "wipe",
+    pokhara: { draw: sPokhara, seed: 11, anchor: "tl", enter: "wipe",
       lines: ["i grew up in pokhara, nepal.", "under machhapuchhre, the “fish tail” mountain."] },
-    { id: "school", draw: sSchool, seed: 22, anchor: "tc", enter: "pan",
+    school: { draw: sSchool, seed: 22, anchor: "tc", enter: "pan",
       lines: ["budhanilkantha school, kathmandu.", "a levels in physics, chemistry, computer science and math. A* in all four.", "valedictorian. 1600 on the sat."] },
-    { id: "lipi-ai", draw: sStone, seed: 44, anchor: "bl", enter: "pan",
-      lines: ["summer 2023: lipi ai.", "an app that reads tibetan inscriptions from a phone photo.", "i built the backend: splitting stacked letters so ocr can read them."] },
-    { id: "nepalingo", draw: sCards, seed: 88, anchor: "tl", enter: "pan",
-      lines: ["summer 2024: nepalingo.", "an open-source app for learning nepal’s indigenous languages.", "i built the flashcards, daily quiz and activity cards. 11 merged pull requests."] },
-    { id: "courses", draw: sNight, seed: 33, anchor: "br", enter: "pan",
-      lines: ["2025: learning on my own.", "the algorithms and machine learning specializations from stanford.", "and harvard’s cs50 ai: twelve projects."] },
-    { id: "summer-builds", draw: sSummer, seed: 99, anchor: "tl", enter: "pan",
-      lines: ["summer 2026: two projects of my own.", "walden.life: thoreau’s walden, one day at a time.", "satitude: practice for the digital sat."] },
-    { id: "lexington", draw: sLexington, seed: 55, anchor: "tl", enter: "rise",
+    lexington: { draw: sLexington, seed: 55, anchor: "tl", enter: "rise",
       lines: ["august 2026: about 12,000 km later.", "washington and lee university, lexington, virginia.", "a math + cs double major, on a full-ride scholarship."] },
-    { id: "diatometer", draw: sMicro, seed: 66, anchor: "tl", enter: "zoom",
-      lines: ["september 2026: diatometer.", "with william & mary’s nano & biomaterials lab: measuring tiny glass algae shells.", "136 shells measured in about 15 seconds."] },
-    { id: "today", draw: sEnd, seed: 77, anchor: "tl", enter: "wipe", links: true,
-      lines: ["still building.", "say hello:"] }
-  ];
-  var ALIASES = { contact: "today", projects: "lipi-ai", experience: "school" };
-  var LINKS = [
-    { label: "email", href: "mailto:thakura30@wlu.edu", aria: "Email Aditya at thakura30@wlu.edu" },
-    { label: "github ↗", href: "https://github.com/sirElvinn", aria: "Aditya on GitHub", ext: true },
-    { label: "linkedin ↗", href: "https://www.linkedin.com/in/aditya-thakur-a76501266/", aria: "Aditya on LinkedIn", ext: true },
-    { label: "résumé ↗", href: "assets/aditya-thakur-resume.pdf", aria: "Aditya's résumé (PDF)", ext: true },
-    { label: "watch again ↺", restart: true, aria: "Watch the story again from the start" }
-  ];
+    today: { draw: sEnd, seed: 77, anchor: "tl", enter: "wipe",
+      lines: ["that’s my story so far.", "want to see more? pick one:"],
+      choices: [
+        { label: "projects →", track: "projects", aria: "Watch my projects" },
+        { label: "experience →", track: "experience", aria: "Watch my experience" },
+        { label: "résumé →", track: "resume", aria: "See my résumé" }
+      ],
+      links: [
+        { label: "email", href: "mailto:thakura30@wlu.edu", aria: "Email Aditya at thakura30@wlu.edu" },
+        { label: "github ↗", href: "https://github.com/sirElvinn", aria: "Aditya on GitHub", ext: true },
+        { label: "linkedin ↗", href: "https://www.linkedin.com/in/aditya-thakur-a76501266/", aria: "Aditya on LinkedIn", ext: true },
+        { label: "watch again ↺", restart: true, aria: "Watch the story again from the start" }
+      ] },
+
+    // projects
+    diatometer: { draw: sMicro, seed: 66, anchor: "tl",
+      lines: ["diatometer · sep 2026 – now.", "with william & mary’s nano & biomaterials lab: measuring tiny glass algae shells.", "136 shells measured in about 15 seconds."],
+      links: [
+        { label: "visit ↗", href: "https://diamometer.us", aria: "Visit DiatoMeter", ext: true },
+        { label: "source ↗", href: "https://github.com/sirElvinn/diatometer", aria: "DiatoMeter source code on GitHub", ext: true }
+      ] },
+    "summer-builds": { draw: sSummer, seed: 99, anchor: "tl",
+      lines: ["summer 2026: two projects of my own.", "walden.life: thoreau’s walden, one day at a time.", "satitude: practice for the digital sat."],
+      links: [
+        { label: "walden.life ↗", href: "https://walden.life", aria: "Visit walden.life", ext: true },
+        { label: "satitude ↗", href: "https://satitude.xyz", aria: "Visit SATitude", ext: true }
+      ] },
+
+    // experience
+    courses: { draw: sNight, seed: 33, anchor: "tl",
+      lines: ["2025: learning on my own.", "the algorithms and machine learning specializations from stanford.", "and harvard’s cs50 ai: twelve projects."],
+      links: [
+        { label: "algorithms ↗", href: "https://coursera.org/verify/specialization/3EANS56UPKJ0", aria: "Verify the Algorithms Specialization certificate", ext: true },
+        { label: "machine learning ↗", href: "https://coursera.org/verify/specialization/Q4C4SVBK51SB", aria: "Verify the Machine Learning Specialization certificate", ext: true },
+        { label: "cs50 ai ↗", href: "https://cs50.harvard.edu/certificates/1f29da05-1c3e-4d82-8301-c2e1e56e03ea", aria: "Verify the CS50 AI certificate", ext: true }
+      ] },
+    nepalingo: { draw: sCards, seed: 88, anchor: "tl",
+      lines: ["summer 2024: incubate nepal.", "frontend developer on nepalingo, an open-source app for learning nepal’s indigenous languages.", "i built the flashcards, daily quiz and activity cards. 11 merged pull requests."],
+      links: [
+        { label: "nepalingo ↗", href: "https://nepalingo.com", aria: "Visit Nepalingo", ext: true },
+        { label: "source ↗", href: "https://github.com/nepalcodes/nepalingo", aria: "Nepalingo source code on GitHub", ext: true }
+      ] },
+    "lipi-ai": { draw: sStone, seed: 44, anchor: "bl",
+      lines: ["summer 2023: student research council nepal.", "lipi ai: an app that reads tibetan inscriptions from a phone photo.", "i built the backend: splitting stacked letters so ocr can read them."] },
+
+    // résumé
+    resume: { draw: sResume, seed: 120, anchor: "tl",
+      lines: ["the one-page version.", "education, projects, experience and skills."],
+      links: [{ label: "open the pdf ↗", href: "assets/aditya-thakur-resume.pdf", aria: "Open Aditya's résumé (PDF)", ext: true }] }
+  };
+  Object.keys(SHOT).forEach(function (id) { SHOT[id].id = id; });
+
+  var TRACKS = {
+    main: ["title", "pokhara", "school", "lexington", "today"],
+    projects: ["diatometer", "summer-builds"],
+    experience: ["courses", "nepalingo", "lipi-ai"],
+    resume: ["resume"]
+  };
+  var MENU = "today";
+  var ALIASES = { contact: "today", menu: "today", projects: "diatometer", experience: "courses" };
+
+  function locate(id) {
+    id = ALIASES[id] || id;
+    for (var name in TRACKS) {
+      var i = TRACKS[name].indexOf(id);
+      if (i >= 0) return { track: name, pos: i };
+    }
+    return null;
+  }
 
   // ---------------------------------------------------------------- film grain
   var grainCanvas = document.createElement("canvas");
@@ -1054,82 +1135,85 @@
     vignette.addColorStop(1, "rgba(0,0,0,0.5)");
   }
 
-  function renderScene(i, t, bctx, bw) {
+  function renderScene(s, t, bctx, bw) {
     ctx = bctx;
-    var s = bw / W;
-    ctx.setTransform(s, 0, 0, s, 0, 0);
+    var k = bw / W;
+    ctx.setTransform(k, 0, 0, k, 0, 0);
     ctx.globalAlpha = 1;
     ctx.fillStyle = INK;
     ctx.fillRect(0, 0, W, H);
-    sid = 0; R = mulberry32(SHOTS[i].seed);
-    SHOTS[i].draw(t);
+    sid = 0; R = mulberry32(s.seed);
+    s.draw(t);
   }
 
   // ---------------------------------------------------------------- state
-  var cur = 0, beat = 0, shotStart = 0, lineStarts = [], trans = null;
+  var track = "main", pos = 0, shot = SHOT.title, beat = 0, shotStart = 0, lineStarts = [], trans = null;
   var TYPE_CPS = 45, CAPTION_DELAY = 650;
 
   function typedDone(k, now) {
-    var len = SHOTS[cur].lines[k].length;
-    return now - lineStarts[k] >= (len / TYPE_CPS) * 1000;
+    return now - lineStarts[k] >= (shot.lines[k].length / TYPE_CPS) * 1000;
   }
 
-  function enterShot(i, dir, now) {
-    var s = SHOTS[i];
-    cur = i;
+  // full = arrive with everything already drawn and written (going back, or returning to the choices)
+  function enterShot(tr, p, now, full) {
+    track = tr; pos = p; shot = SHOT[TRACKS[tr][p]];
     lineStarts = [];
-    if (dir < 0 || reduceMotion) {
-      // arriving backwards (or without motion): everything already drawn and written
+    if (full || reduceMotion) {
       shotStart = now - 60000;
-      beat = s.lines.length;
+      beat = shot.lines.length;
       for (var k = 0; k < beat; k++) lineStarts.push(now - 100000);
     } else {
       shotStart = now;
       var delay = (trans ? trans.dur : 0) + CAPTION_DELAY;
-      if (s.auto) {
-        beat = s.lines.length;
+      if (shot.auto) {
+        beat = shot.lines.length;
         for (var j = 0; j < beat; j++) lineStarts.push(now + delay + j * 1300);
       } else {
         beat = 1;
         lineStarts.push(now + delay);
       }
     }
-    try { history.replaceState(null, "", i === 0 ? location.pathname : "#" + s.id); } catch (e) {}
+    try { history.replaceState(null, "", shot.id === "title" ? location.pathname : "#" + shot.id); } catch (e) {}
     announce();
   }
 
-  function go(i, dir) {
+  function go(tr, p, dir, type, full) {
     var now = performance.now();
-    if (i < 0 || i >= SHOTS.length) return;
-    trans = reduceMotion ? null : {
-      from: cur, fromStart: shotStart, type: dir > 0 ? SHOTS[i].enter : SHOTS[cur].enter,
-      dir: dir, start: now, dur: 1050
-    };
-    if (trans && !trans.type) trans.type = "pan";
-    enterShot(i, dir, now);
+    trans = reduceMotion ? null : { fromShot: shot, fromStart: shotStart, type: type || "pan", dir: dir, start: now, dur: 1050 };
+    enterShot(tr, p, now, full || dir < 0);
   }
+
+  function startTrack(name) { go(name, 0, 1, "zoom", false); }
+  function backToChoices(dir) { go("main", TRACKS.main.indexOf(MENU), dir, "wipe", true); }
+  function restart() { trans = null; go("main", 0, 1, "wipe", false); }
 
   function next() {
     var now = performance.now();
     if (trans) { trans = null; return; }
-    var s = SHOTS[cur], typing = false;
+    var typing = false;
     for (var k = 0; k < beat; k++) {
       if (!typedDone(k, now)) { lineStarts[k] = now - 100000; typing = true; }
     }
     if (typing) { announce(); return; }
-    if (beat < s.lines.length) { lineStarts[beat] = now; beat++; announce(); return; }
-    if (cur < SHOTS.length - 1) go(cur + 1, 1);
+    if (beat < shot.lines.length) { lineStarts[beat] = now; beat++; announce(); return; }
+    var list = TRACKS[track];
+    if (pos < list.length - 1) {
+      var nextShot = SHOT[list[pos + 1]];
+      go(track, pos + 1, 1, track === "main" ? nextShot.enter : "pan", false);
+      return;
+    }
+    if (track !== "main") backToChoices(1);
+    // At the choices, the film waits: the choice boxes are the way on.
   }
 
   function prev() {
     if (trans) trans = null;
-    if (!SHOTS[cur].auto && beat > 1) { beat--; announce(); return; }
-    if (cur > 0) go(cur - 1, -1);
+    if (!shot.auto && beat > 1) { beat--; announce(); return; }
+    if (pos > 0) { go(track, pos - 1, -1, track === "main" ? shot.enter : "pan", true); return; }
+    if (track !== "main") backToChoices(-1);
   }
 
-  function restart() { trans = null; go(0, 1); }
-
-  // ---------------------------------------------------------------- captions (drawn in screen space, so they stay readable)
+  // ---------------------------------------------------------------- captions and boxes (drawn in screen space, so they stay readable)
   var HAND_FONT = function (size) { return "700 " + size + "px " + HAND; };
 
   function wrap(text, maxW, size) {
@@ -1146,14 +1230,13 @@
     return { lines: lines, w: w };
   }
 
-  // Lay out a stack of boxes for the given texts at the shot's anchor (or below the film on tall screens).
   function stack(texts, size, anchor, big) {
-    var padX = size * 0.75, padY = size * 0.5, lineH = size * 1.22, gap = size * 0.75, m = size * 0.95;
-    var maxW = portrait ? VW - 32 - padX * 2 : film.w * (anchor === "tc" ? 0.62 : 0.46);
+    var gap = size * 0.75, m = size * 0.95;
+    var maxW = portrait ? VW - 32 - size * 1.5 : film.w * (anchor === "tc" ? 0.62 : 0.46);
     var boxes = texts.map(function (tx, k) {
       var sz = big && k === 0 ? size * 1.5 : size, px = sz * 0.75, py = sz * 0.5, lh = sz * 1.22;
       var r = wrap(tx, maxW, sz);
-      return { text: tx, lines: r.lines, w: r.w + px * 2, h: r.lines.length * lh + py * 2 - lh * 0.18, padX: px, padY: py, lineH: lh, size: sz };
+      return { lines: r.lines, w: r.w + px * 2, h: r.lines.length * lh + py * 2 - lh * 0.18, padX: px, padY: py, lineH: lh, size: sz };
     });
     var total = boxes.reduce(function (a, b) { return a + b.h; }, 0) + gap * Math.max(0, boxes.length - 1);
     var y = portrait ? film.y + film.h + 22
@@ -1182,34 +1265,52 @@
     }
   }
 
-  var linkRects = [];
+  // A row of clickable boxes (choices or links) that wraps onto new rows when it runs out of room.
+  function boxRow(items, kind, x0, y0, size, maxX, t0, now, fade, keyBase) {
+    var x = x0, y = y0, rowBottom = y0;
+    items.forEach(function (it, j) {
+      var r = wrap(it.label, 1e4, size), padX = size * 0.7, padY = size * 0.45;
+      var b = { lines: [it.label], w: r.w + padX * 2, h: size * 1.22 + padY * 2 - size * 0.22, padX: padX, padY: padY, lineH: size * 1.22, size: size };
+      if (x + b.w > maxX && j > 0) { x = x0; y = rowBottom + size * 0.7; }
+      b.x = x; b.y = y;
+      x += b.w + size * 0.9;
+      rowBottom = Math.max(rowBottom, y + b.h);
+      var a = reduceMotion ? fade : clamp01((now - (t0 + j * 160)) / 260) * fade;
+      if (a > 0) {
+        drawBox(b, keyBase + j, a, null);
+        hits.push({ key: shot.id + ":" + kind + ":" + j, kind: kind, item: it, x: b.x - 5, y: b.y - 5, w: b.w + 10, h: b.h + 10 });
+      }
+    });
+    return rowBottom;
+  }
+
+  var hits = [];
   function drawCaptions(now, fade) {
     ctx = main;
     main.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var s = SHOTS[cur], texts = s.lines.slice(0, beat);
-    var st = stack(texts, capSize, s.anchor, s.auto);
+    var texts = shot.lines.slice(0, beat);
+    var st = stack(texts, capSize, shot.anchor, shot.auto);
     st.boxes.forEach(function (b, k) {
       var since = now - lineStarts[k];
       if (since < 0) return;
       var a = clamp01(since / 260) * fade;
       var chars = reduceMotion ? null : Math.floor((since / 1000) * TYPE_CPS);
-      drawBox(b, cur * 10 + k, a, chars);
+      drawBox(b, k + shot.seed * 10, a, chars);
     });
-    linkRects = [];
-    if (s.links && beat >= s.lines.length) {
-      var lastStart = lineStarts[s.lines.length - 1], size = capSize * 0.92;
-      var x = st.boxes.length ? st.boxes[0].x : film.x + 20, y = st.bottom + capSize * 0.9;
+    hits = [];
+    if (beat >= shot.lines.length && (shot.choices || shot.links)) {
+      var lastStart = lineStarts[shot.lines.length - 1];
+      var x0 = st.boxes.length ? st.boxes[0].x : film.x + 20;
       var maxX = portrait ? VW - 16 : film.x + film.w - capSize;
-      LINKS.forEach(function (L, j) {
-        var r = wrap(L.label, 1e4, size), padX = size * 0.7, padY = size * 0.45;
-        var b = { text: L.label, lines: [L.label], w: r.w + padX * 2, h: size * 1.22 + padY * 2 - size * 0.22, padX: padX, padY: padY, lineH: size * 1.22, size: size };
-        if (x + b.w > maxX && j > 0) { x = st.boxes.length ? st.boxes[0].x : film.x + 20; y += b.h + size * 0.7; }
-        b.x = x; b.y = y;
-        x += b.w + size * 0.9;
-        var since = now - (lastStart + 500 + j * 160);
-        var a = reduceMotion ? fade : clamp01(since / 260) * fade;
-        if (a > 0) { drawBox(b, 900 + j, a, null); linkRects.push({ i: j, x: b.x - 5, y: b.y - 5, w: b.w + 10, h: b.h + 10 }); }
-      });
+      var y = st.bottom + capSize * 0.9;
+      // when the captions sit at the bottom of the film, put the boxes above them instead
+      if (!portrait && shot.anchor.charAt(0) === "b") y = (st.boxes.length ? st.boxes[0].y : film.y + film.h) - capSize * 3.2;
+      if (shot.choices) {
+        y = boxRow(shot.choices, "choice", x0, y, capSize * 1.08, maxX, lastStart + 500, now, fade, 800) + capSize * 0.9;
+      }
+      if (shot.links) {
+        boxRow(shot.links, "link", x0, y, capSize * 0.86, maxX, lastStart + (shot.choices ? 1100 : 500), now, fade, 900);
+      }
     }
   }
 
@@ -1228,22 +1329,24 @@
     sid = 70000; R = mulberry32(4242);
     brush(rectPts(film.x - 2, film.y - 2, film.w + 4, film.h + 4, 0.9), 1.6, 1, { taper: 0.02, alpha: 0.5 });
 
-    var n = SHOTS.length, gapD = 14, dy = portrait ? VH - 26 : film.y + film.h + 22, x0 = VW / 2 - ((n - 1) * gapD) / 2;
-    for (var i = 0; i < n; i++) {
+    var list = TRACKS[track], n = list.length, gapD = 14;
+    var dy = portrait ? VH - 26 : film.y + film.h + 22, x0 = VW / 2 - ((n - 1) * gapD) / 2;
+    for (var i = 0; i < n && n > 1; i++) {
       main.beginPath();
-      main.arc(x0 + i * gapD, dy, i === cur ? 3.6 : 2.6, 0, Math.PI * 2);
-      main.globalAlpha = i === cur ? 0.95 : 0.35;
+      main.arc(x0 + i * gapD, dy, i === pos ? 3.6 : 2.6, 0, Math.PI * 2);
+      main.globalAlpha = i === pos ? 0.95 : 0.35;
       main.fillStyle = PAPER;
       main.fill();
     }
     main.globalAlpha = 1;
 
-    // edge arrows: shown on hover with a mouse, and pulsing on the title shot as a hint
-    var showNext = (hover === "next") || (cur === 0 && !reduceMotion);
-    var showPrev = hover === "prev" && cur > 0;
+    var atChoices = shot.id === MENU && beat >= shot.lines.length;
+    var showNext = !atChoices && ((hover === "next") || (shot.id === "title" && !reduceMotion));
+    var canBack = pos > 0 || track !== "main";
+    var showPrev = hover === "prev" && canBack;
     var cy = film.y + film.h / 2, sz = Math.max(12, capSize * 0.7);
-    if (showNext && !(cur === SHOTS.length - 1 && beat >= SHOTS[cur].lines.length)) {
-      var pulse = cur === 0 && hover !== "next" ? 0.35 + 0.35 * Math.sin(now / 400) : 0.75;
+    if (showNext) {
+      var pulse = shot.id === "title" && hover !== "next" ? 0.35 + 0.35 * Math.sin(now / 400) : 0.75;
       var ax = film.x + film.w - sz * 1.6;
       brush(path([[ax - sz * 0.4, cy - sz], [ax + sz * 0.5, cy], [ax - sz * 0.4, cy + sz]], 0.3), 3, 1, { alpha: Math.max(0, pulse), taper: 0.3 });
     }
@@ -1306,11 +1409,11 @@
     main.fillRect(0, 0, VW, VH);
 
     var tCur = reduceMotion ? 60 : (now - shotStart) / 1000;
-    renderScene(cur, tCur, bctxA, bufA.width);
+    renderScene(shot, tCur, bctxA, bufA.width);
     var fade = 1;
     if (trans) {
       var p = clamp01((now - trans.start) / trans.dur), e = easeInOut(p);
-      renderScene(trans.from, (now - trans.fromStart) / 1000, bctxB, bufB.width);
+      renderScene(trans.fromShot, (now - trans.fromStart) / 1000, bctxB, bufB.width);
       main.setTransform(dpr, 0, 0, dpr, 0, 0);
       compose(e);
       fade = e;
@@ -1321,45 +1424,54 @@
     }
     drawFilmChrome(now);
     drawCaptions(now, fade);
-    placeLinks();
+    placeHits();
   }
 
-  // ---------------------------------------------------------------- real links over the drawn boxes (clickable, keyboard-reachable)
-  var linkEls = LINKS.map(function (L, j) {
-    var el;
-    if (L.restart) {
+  // ---------------------------------------------------------------- real buttons and links over the drawn boxes (clickable, keyboard-reachable)
+  var hitEls = {};
+  function hitEl(h) {
+    if (hitEls[h.key]) return hitEls[h.key];
+    var el, it = h.item;
+    if (h.kind === "choice" || it.restart) {
       el = document.createElement("button");
       el.type = "button";
-      el.addEventListener("click", function (ev) { ev.stopPropagation(); restart(); filmCanvas.focus(); });
+      el.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        if (it.restart) restart(); else startTrack(it.track);
+        filmCanvas.focus();
+      });
     } else {
       el = document.createElement("a");
-      el.href = L.href;
-      if (L.ext) { el.target = "_blank"; el.rel = "noopener"; }
+      el.href = it.href;
+      if (it.ext) { el.target = "_blank"; el.rel = "noopener"; }
     }
     el.className = "film-link";
-    el.setAttribute("aria-label", L.aria);
-    el.hidden = true;
+    el.setAttribute("aria-label", it.aria || it.label);
     document.body.appendChild(el);
-    return el;
-  });
-  function placeLinks() {
+    return (hitEls[h.key] = el);
+  }
+  function placeHits() {
     var shown = {};
-    linkRects.forEach(function (r) {
-      var el = linkEls[r.i];
-      shown[r.i] = true;
+    hits.forEach(function (h) {
+      var el = hitEl(h);
+      shown[h.key] = true;
       el.hidden = false;
-      el.style.left = r.x + "px"; el.style.top = r.y + "px";
-      el.style.width = r.w + "px"; el.style.height = r.h + "px";
+      el.style.left = h.x + "px"; el.style.top = h.y + "px";
+      el.style.width = h.w + "px"; el.style.height = h.h + "px";
     });
-    linkEls.forEach(function (el, j) { if (!shown[j]) el.hidden = true; });
+    Object.keys(hitEls).forEach(function (k) { if (!shown[k]) hitEls[k].hidden = true; });
   }
 
   // ---------------------------------------------------------------- screen readers: say each caption as it appears
   var live = document.getElementById("film-live");
   function announce() {
     if (!live) return;
-    var s = SHOTS[cur];
-    live.textContent = s.lines.slice(0, beat).join(" ") + (s.links && beat >= s.lines.length ? " Links: email, GitHub, LinkedIn, résumé." : "");
+    var extra = "";
+    if (beat >= shot.lines.length) {
+      if (shot.choices) extra += " Choices: " + shot.choices.map(function (c) { return c.aria; }).join(", ") + ".";
+      if (shot.links) extra += " Links: " + shot.links.map(function (l) { return l.aria; }).join(", ") + ".";
+    }
+    live.textContent = shot.lines.slice(0, beat).join(" ") + extra;
   }
 
   // ---------------------------------------------------------------- input: click/tap, swipe, keys, wheel
@@ -1375,13 +1487,14 @@
     var dx = e.clientX - down.x, dy = e.clientY - down.y;
     down = null;
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { if (dx < 0) next(); else prev(); return; }
-    if (e.clientX < VW * 0.22 && cur > 0) prev(); else next();
+    if (e.clientX < VW * 0.22 && (pos > 0 || track !== "main")) prev(); else next();
   });
   document.addEventListener("keydown", function (e) {
     if (e.target && e.target.classList && e.target.classList.contains("film-link")) return;
     if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter" || e.key === "PageDown") { e.preventDefault(); next(); }
     else if (e.key === "ArrowLeft" || e.key === "PageUp" || e.key === "Backspace") { e.preventDefault(); prev(); }
     else if (e.key === "Home") { e.preventDefault(); restart(); }
+    else if (e.key === "Escape" && track !== "main") { e.preventDefault(); backToChoices(-1); }
   });
   window.addEventListener("wheel", function (e) {
     var now = performance.now();
@@ -1396,15 +1509,12 @@
   window.addEventListener("resize", layout);
   layout();
 
-  // Start where the link points (adthakur.com/#diatometer), or at the title.
+  // Start where the link points (adthakur.com/#diatometer, /#projects, /#contact), or at the title.
   (function () {
-    var h = (location.hash || "").replace("#", "");
-    h = ALIASES[h] || h;
-    var idx = 0;
-    SHOTS.forEach(function (s, i) { if (s.id === h) idx = i; });
-    var now = performance.now();
-    if (idx > 0 && h === "today") { enterShot(idx, -1, now); return; }
-    enterShot(idx, 1, now);
+    var h = decodeURIComponent((location.hash || "").replace("#", ""));
+    var at = h ? locate(h) : null, now = performance.now();
+    if (!at) { enterShot("main", 0, now, false); return; }
+    enterShot(at.track, at.pos, now, at.track === "main" && TRACKS.main[at.pos] === MENU);
   })();
 
   var started = false;
@@ -1416,10 +1526,9 @@
     begin();
   }
 
-  // For checking by hand from the browser console: filmDebug.show(8) jumps to a shot, fully drawn.
+  // For checking by hand from the browser console: filmDebug.show("diatometer") jumps to a shot, fully drawn.
   window.filmDebug = {
-    show: function (i) { trans = null; enterShot(i, -1, performance.now()); },
-    go: function (i) { go(i, 1); },
-    next: next, prev: prev
+    show: function (id) { var at = locate(id); if (at) { trans = null; enterShot(at.track, at.pos, performance.now(), true); } },
+    track: startTrack, next: next, prev: prev
   };
 })();

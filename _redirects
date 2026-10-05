@@ -1,8 +1,8 @@
-# The site used to have separate pages; it's one film now. Old links forward to the matching shot.
-/projects          /#lipi-ai     301
-/projects.html     /#lipi-ai     301
-/experience        /#school      301
-/experience.html   /#school      301
+# The site used to have separate pages; it's one film now. Old links forward to the matching part.
+/projects          /#projects    301
+/projects.html     /#projects    301
+/experience        /#experience  301
+/experience.html   /#experience  301
 /contact           /#contact     301
 /contact.html      /#contact     301
 /story             /             301
