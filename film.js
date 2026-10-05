@@ -338,9 +338,9 @@
   }
 
   // ---------------------------------------------------------------- scene: the road into Budhanilkantha School
-  // Drawn from a photo of the entrance: flagpoles along the left, a red-roofed building, the forested hills
-  // behind, big trees on the right, flower pots along the road, the BNKS sign, and Mirga (my deer plushie)
-  // sitting in the grass with its little Nepal flags.
+  // Drawn from photos of the campus: the flag-lined entrance road, long red-roofed brick buildings with
+  // hedges, Shivapuri's forested slopes with mist drifting across, the Saraswati temple's pagoda roof
+  // above the trees, big shade trees, flower pots along the road, and the BNKS sign.
   function blobPts(cx, cy, rx, ry, k1, k2, n) {
     var pts = [];
     for (var i = 0; i <= n; i++) {
@@ -376,93 +376,90 @@
     }
   }
 
-  function nepalFlag(px, py, dir, h, p) {
-    // the double pennant, hanging from a pole at (px, py), pointing left (dir = -1) or right (dir = 1)
-    var w = h * 0.72, shape = closed([[px, py], [px + dir * w, py + h * 0.5], [px + dir * w * 0.42, py + h * 0.5], [px + dir * w * 1.02, py + h], [px, py + h]], 0.2);
-    fill(shape, PAPER, p);
-    brush(shape, 1.2, p, { color: INK, taper: 0 });
-    brush(arcPts(px + dir * w * 0.3, py + h * 0.3, h * 0.08, h * 0.05, 0.2, Math.PI - 0.2, 0.1), 1.2, p, { color: INK, taper: 0 });
-    fill(circlePts(px + dir * w * 0.32, py + h * 0.72, h * 0.07, 0.1), INK, p);
-  }
-
-  function mirga(ox, oy, s, t, t0) {
-    // Mirga: my spotted deer plushie, lying down and facing left. A big head sitting almost on the body,
-    // a large shiny eye, short ears swept back, two stubby antler nubs, spots along the back, legs tucked
-    // forward with dark hooves, and the little gold stand with two Nepal flags in front.
-    function P(x, y) { return [ox + x * s, oy + y * s]; }
-    function Ps(list) { return list.map(function (p) { return P(p[0], p[1]); }); }
-    var a = prog(t, t0, 0.5), ln = prog(t, t0 + 0.2, 1.0);
-
-    fill(Ps(arcPts(48, 12, 24, 18, 0, Math.PI * 2, 0.3)), INK, a);                                        // hind leg
-    brush(Ps(arcPts(48, 12, 24, 18, -0.5, 2.6, 0.3)), 2.4 * s, ln, {});
-    var body = Ps(blobPts(8, 0, 66, 30, 2, 3, 30));
-    fill(body, INK, a);
-    brush(body, 2.6 * s, ln, { taper: 0.02 });
-    var spots = [[-22, -18], [-6, -24], [10, -26], [26, -25], [42, -20], [56, -12],
-                 [-12, -8], [4, -12], [20, -12], [36, -8], [50, -2], [12, 0]];
-    spots.forEach(function (sp, i) {
-      fill(Ps(circlePts(sp[0], sp[1] + (R() - 0.5) * 3, 3 + R() * 1.6, 0.2)), PAPER, prog(t, t0 + 0.8 + i * 0.03, 0.3));
-    });
-    brush(Ps(path([[-36, 20], [-72, 26], [-104, 30]], 0.3)), 13 * s, ln, { alpha: 0.85, taper: 0.1 });    // front legs
-    brush(Ps(path([[-26, 26], [-62, 33], [-92, 38]], 0.3)), 13 * s, ln, { alpha: 0.7, taper: 0.1 });
-    [[-108, 30], [-96, 38]].forEach(function (h) {                                                         // dark hooves
-      fill(Ps(arcPts(h[0], h[1], 9, 7, 0, Math.PI * 2, 0.1)), INK, a);
-      brush(Ps(arcPts(h[0], h[1], 9, 7, 0, Math.PI * 2, 0.1)), 1.6 * s, ln, {});
-    });
-    brush(Ps(seg(72, -10, 84, -18, 0.2)), 4 * s, ln, {});                                                  // tail
-
-    var neck = Ps(closed([[-50, -22], [-24, -24], [-34, -54], [-58, -56]], 0.3));
-    fill(neck, INK, a);
-    brush(Ps(seg(-56, -52, -50, -22, 0.2)), 2.2 * s, ln, {});
-    brush(Ps(path([[-42, -64], [-20, -82], [-28, -56]], 0.3)), 2.6 * s, ln, {});                            // ears, swept back
-    brush(Ps(path([[-56, -68], [-46, -90], [-38, -66]], 0.3)), 2.6 * s, ln, {});
-    brush(Ps(seg(-66, -66, -70, -86, 0.2)), 10 * s, ln, { alpha: 0.85, taper: 0.45 });                      // antler nubs
-    brush(Ps(seg(-54, -70, -52, -90, 0.2)), 10 * s, ln, { alpha: 0.85, taper: 0.45 });
-    var head = Ps(blobPts(-60, -46, 30, 24, 2, 3, 26));
-    fill(head, INK, a);
-    var snout = Ps(closed([[-80, -54], [-102, -42], [-98, -28], [-76, -30]], 0.3));
-    fill(snout, INK, a);
-    brush(head, 2.4 * s, ln, { taper: 0.02 });
-    brush(Ps(path([[-82, -56], [-102, -42], [-98, -28], [-78, -28]], 0.3)), 2.2 * s, ln, {});
-    fill(Ps(arcPts(-99, -36, 5, 4, 0, Math.PI * 2, 0.1)), PAPER, a);                                       // nose
-    fill(Ps(circlePts(-64, -50, 10, 0.1)), PAPER, a);                                                      // the big eye
-    fill(Ps(circlePts(-64, -50, 7.6, 0.1)), INK, a);
-    fill(Ps(circlePts(-60, -54, 2.6, 0.05)), PAPER, a);
-
-    var fp = prog(t, t0 + 1.0, 0.5);                                                                       // the flag stand
-    fill(Ps(rectPts(-62, 40, 46, 7, 0.1)), PAPER, fp);
-    brush(Ps(seg(-50, 40, -30, -30, 0.1)), 2.6 * s, fp, { taper: 0 });
-    brush(Ps(seg(-26, 40, -44, -28, 0.1)), 2.6 * s, fp, { taper: 0 });
-    fill(Ps(circlePts(-30, -34, 3.4, 0.1)), PAPER, fp);
-    fill(Ps(circlePts(-44, -32, 3.4, 0.1)), PAPER, fp);
-    var f1 = P(-44, -26), f2 = P(-30, -28);
-    nepalFlag(f1[0], f1[1], -1, 30 * s, fp);
-    nepalFlag(f2[0], f2[1], 1, 30 * s, fp);
-  }
-
   function sSchool(t) {
-    cloud(330, 76, 1.15, t, 0.2);
-    cloud(600, 118, 0.8, t, 0.5);
-    cloud(120, 124, 0.7, t, 0.7);
+    cloud(330, 64, 1.1, t, 0.2);
+    cloud(110, 96, 0.7, t, 0.6);
 
-    // the forested hills behind (Shivapuri)
-    var hills = path([[0, 252], [90, 214], [200, 204], [300, 222], [380, 236], [470, 226], [560, 246], [640, 262], [720, 276]], 0.8);
-    fill(hills.concat([[720, 400], [0, 400]]), INK, 1, { still: true });
-    brush(hills, 2.4, prog(t, 0.3, 1.4), {});
-    for (var f = 0; f < 70; f++) {
-      var fx = R() * 690, fy = 236 + R() * 90 - (fx < 300 ? 18 : 0), fr = 3 + R() * 4;
-      brush(arcPts(fx, fy, fr, fr * 0.8, Math.PI * 1.1, Math.PI * 1.9, 0.2), 1.1, prog(t, 0.8 + R() * 1.0, 0.3), { alpha: 0.55, taper: 0.3 });
+    // Shivapuri: the forested mountain right behind the campus
+    var ridgeKnots = [[0, 196], [70, 170], [150, 150], [230, 138], [300, 144], [370, 158], [440, 168], [520, 186], [600, 198], [700, 214], [760, 224]];
+    function ridgeAt(x) {
+      for (var i = 1; i < ridgeKnots.length; i++) {
+        if (x <= ridgeKnots[i][0]) {
+          var k0 = ridgeKnots[i - 1], k1 = ridgeKnots[i];
+          return k0[1] + (k1[1] - k0[1]) * (x - k0[0]) / (k1[0] - k0[0]);
+        }
+      }
+      return ridgeKnots[ridgeKnots.length - 1][1];
     }
+    var hills = path(ridgeKnots, 0.8);
+    fill(hills.concat([[760, 420], [0, 420]]), INK, 1, { still: true });
+    brush(hills, 2.4, prog(t, 0.3, 1.4), {});
+    for (var row = 0; row < 7; row++) {                     // rows of treetops following the slope
+      for (var col = 0; col < 22; col++) {
+        var fx = col * 34 + (row % 2) * 17 + (R() - 0.5) * 14, fy = ridgeAt(fx) + 14 + row * 26 + (R() - 0.5) * 10, fr = 4 + R() * 3;
+        brush(arcPts(fx, fy, fr, fr * 0.85, Math.PI * 1.05, Math.PI * 1.95, 0.2), 1.1,
+          fy < 380 ? prog(t, 0.7 + row * 0.12 + R() * 0.4, 0.3) : 0, { alpha: 0.5 - row * 0.03, taper: 0.3 });
+      }
+    }
+    [[120, 160, 70, 300], [260, 146, 230, 290], [420, 166, 450, 300], [560, 192, 600, 300]].forEach(function (rv, k) {   // ravines
+      brush(path([[rv[0], rv[1] + 6], [lerp(rv[0], rv[2], 0.5) + 8, lerp(rv[1], rv[3], 0.5)], [rv[2], rv[3]]], 0.6), 1.6, prog(t, 1.0 + k * 0.1, 0.6), { alpha: 0.45, dry: 0.6 });
+    });
+    var drift = reduceMotion ? 0 : Math.sin(t * 0.25) * 24;    // mist drifting across the slopes
+    [[40, 232, 380, 11], [300, 258, 700, 10], [-20, 288, 300, 9]].forEach(function (m, k) {
+      var dd = drift * (k % 2 ? -1 : 1), mid = (m[0] + m[2]) / 2;
+      brush(path([[m[0] + dd, m[1] + 3], [mid - 60 + dd, m[1] - 4], [mid + 50 + dd, m[1] + 5], [m[2] + dd, m[1] - 2]], 0.8), m[3], prog(t, 1.6 + k * 0.2, 1.2), { alpha: 0.09, dry: 1, still: true, taper: 0.5 });
+    });
 
-    // trees in the middle distance, and the red-roofed building on the left
-    treeBlob(400, 300, 78, 62, t, 0.6, 24);
-    treeBlob(520, 296, 62, 56, t, 0.7, 20);
+    // a big shade tree behind the left building
+    treeBlob(150, 286, 90, 50, t, 0.7, 20);
+
+    // another long red-roofed block at the end of the road (partly behind the trees)
+    var b2 = prog(t, 1.0, 0.8);
+    var roof2 = closed([[552, 344], [574, 326], [692, 326], [712, 344]], 0.5);
+    fill(roof2, INK, 1, { still: true });
+    brush(roof2, 2.2, b2, { taper: 0.02 });
+    for (var h2 = 0; h2 < 8; h2++) brush(seg(584 + h2 * 14, 329, 576 + h2 * 15, 342, 0.2), 1.2, prog(t, 1.3 + h2 * 0.04, 0.2), { alpha: 0.7 });
+    brush(rectPts(560, 344, 144, 38, 0.4), 1.8, b2, { taper: 0.02 });
+    for (var w2 = 0; w2 < 5; w2++) brush(rectPts(570 + w2 * 26, 354, 14, 16, 0.2), 1.2, prog(t, 1.5 + w2 * 0.05, 0.3), { taper: 0.02 });
+
+    // the Saraswati temple's two-tiered pagoda roof, peeking over the trees
+    var pg = prog(t, 1.4, 0.6), px = 462;
+    function G(x, y) { return [px + x * 1.3, 252 + y * 1.3]; }
+    function Gs(list) { return list.map(function (p) { return G(p[0], p[1]); }); }
+    brush(Gs(seg(0, -40, 0, -26, 0.1)), 3, pg, { taper: 0.2 });
+    fill(Gs(circlePts(0, -41, 2.6, 0.1)), PAPER, pg);
+    fill(Gs(closed([[-16, -22], [16, -22], [27, -13], [-27, -13]], 0.2)), PAPER, pg * 0.85);
+    brush(Gs(arcPts(-30, -17, 4, 4, -0.2, 1.8, 0.1)), 2, pg, {});
+    brush(Gs(arcPts(30, -17, 4, 4, 1.3, 3.3, 0.1)), 2, pg, {});
+    fill(Gs(rectPts(-11, -13, 22, 9, 0.1)), INK, pg);
+    brush(Gs(rectPts(-11, -13, 22, 9, 0.1)), 1.6, pg, { taper: 0 });
+    fill(Gs(closed([[-28, -4], [28, -4], [42, 7], [-42, 7]], 0.3)), PAPER, pg * 0.85);
+    brush(Gs(arcPts(-45, 2, 5, 5, -0.2, 1.8, 0.1)), 2, pg, {});
+    brush(Gs(arcPts(45, 2, 5, 5, 1.3, 3.3, 0.1)), 2, pg, {});
+    brush(Gs(seg(-30, 9, 30, 9, 0.1)), 2.4, pg, { alpha: 0.8 });
+
+    // trees in the middle distance (they hide the temple's base)
+    treeBlob(400, 304, 78, 60, t, 0.6, 24);
+    treeBlob(522, 302, 60, 54, t, 0.7, 20);
+
+    // the long red-roofed brick block on the left, with a trimmed hedge in front
     var rb = prog(t, 0.9, 0.8);
-    fill(closed([[60, 352], [100, 322], [270, 322], [294, 352]], 0.5), INK, 1, { still: true });
-    brush(closed([[60, 352], [100, 322], [270, 322], [294, 352]], 0.5), 2.4, rb, { taper: 0.02 });
-    for (var hr = 0; hr < 11; hr++) brush(seg(108 + hr * 16, 326, 98 + hr * 17, 348, 0.2), 1.4, prog(t, 1.2 + hr * 0.04, 0.2), { alpha: 0.75 });
-    brush(rectPts(72, 352, 210, 52, 0.5), 2, rb, { taper: 0.02 });
-    for (var wi = 0; wi < 4; wi++) brush(rectPts(90 + wi * 48, 366, 22, 22, 0.2), 1.4, prog(t, 1.4 + wi * 0.05, 0.3), { taper: 0.02 });
+    var roof1 = closed([[28, 352], [62, 326], [302, 326], [330, 352]], 0.5);
+    fill(roof1, INK, 1, { still: true });
+    brush(roof1, 2.4, rb, { taper: 0.02 });
+    for (var hr = 0; hr < 16; hr++) brush(seg(72 + hr * 15, 330, 62 + hr * 16, 349, 0.2), 1.3, prog(t, 1.2 + hr * 0.03, 0.2), { alpha: 0.75 });
+    fill(rectPts(38, 352, 282, 44, 0.4), INK, 1, { still: true });
+    brush(rectPts(38, 352, 282, 44, 0.4), 2, rb, { taper: 0.02 });
+    for (var wi = 0; wi < 7; wi++) {
+      var wx = 52 + wi * 38;
+      brush(rectPts(wx, 362, 20, 22, 0.2), 1.4, prog(t, 1.4 + wi * 0.05, 0.3), { taper: 0.02 });
+      brush(seg(wx + 10, 362, wx + 10, 384, 0.05), 0.9, prog(t, 1.5 + wi * 0.05, 0.3), { taper: 0, alpha: 0.7 });
+    }
+    var hedge = [[30, 414]];
+    for (var hg = 0; hg <= 14; hg++) hedge = hedge.concat(arcPts(40 + hg * 20, 404, 10, 8, Math.PI, Math.PI * 2, 0.3));
+    hedge.push([330, 414]);
+    fill(hedge, INK, 1, { still: true });
+    brush(hedge, 1.8, prog(t, 1.5, 1.0), { taper: 0.03 });
 
     // the big trees on the right: trunks, then a full, lumpy canopy
     brush(path([[936, 480], [910, 400], [880, 330], [846, 280]], 0.8), 9, prog(t, 1.0, 0.8), { taper: 0.25 });
@@ -516,8 +513,8 @@
     fill(wallTop.concat([L(1), L(0)]), INK, 1, { still: true });
     brush(path(wallTop, 0.5), 2.4, prog(t, 1.4, 0.8), {});
     brush(path(railTop, 0.5), 2, prog(t, 1.6, 0.8), {});
-    for (var pk = 0; pk < 12; pk++) {
-      var pu = Math.pow(pk / 11, 1.3), pq = L(pu);
+    for (var pk = 0; pk < 8; pk++) {
+      var pu = Math.pow(pk / 7, 1.3), pq = L(pu);
       brush(seg(pq[0] - lerp(10, 2, pu), pq[1] - lerp(122, 22, pu), pq[0], pq[1] - lerp(44, 8, pu), 0.2), lerp(3, 1, pu), prog(t, 1.8 + pk * 0.04, 0.3), { taper: 0.02 });
     }
 
@@ -539,8 +536,6 @@
     brush(seg(604, 384, 604, 352, 0.2), 2, sa, {});
     fill(rectPts(584, 330, 42, 24, 0.3), PAPER, sa);
     hand("BNKS", 605, 348, 14, INK, "center", sa);
-
-    mirga(852, 482, 1.1, t, 2.6);
 
     // someone walking up to school (last: the legs move)
     var wa = prog(t, 1.8, 0.4), wx = 520, wy = 410, ph = reduceMotion ? 0 : Math.sin(t * 4) * 3;
