@@ -1,0 +1,9 @@
+# The site used to have four pages; it's one page now. Old links forward to the right spot.
+/projects          /#lipi-ai     301
+/projects.html     /#lipi-ai     301
+/experience        /#school      301
+/experience.html   /#school      301
+/contact           /#contact     301
+/contact.html      /#contact     301
+/story             /             301
+/story.html        /             301

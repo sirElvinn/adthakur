@@ -216,7 +216,12 @@
   }
 
   // ---- Loop ----
-  function frameAll(now) { list.forEach(function (f) { f.draw(now); }); }
+  function frameAll(now) {
+    list.forEach(function (f) {
+      if (f.el.getBoundingClientRect().bottom < 0) return;   // scrolled out of view: skip the work
+      f.draw(now);
+    });
+  }
 
   var resizeTimer;
   window.addEventListener("resize", function () {

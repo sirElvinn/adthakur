@@ -1,38 +1,34 @@
-# adthakur: personal portfolio
+# adthakur: the story so far
 
-A four-page portfolio site for Aditya Bikram Thakur, live at https://adthakur.com. It is plain HTML, CSS, and a little JavaScript.
-There is no framework and no build step, so what you see in these files is exactly what the browser gets.
+A one-page site for Aditya Bikram Thakur, live at https://adthakur.com. It tells the story so far in chapters,
+from Pokhara to DiatoMeter, each with an ink drawing or a real screenshot. It is plain HTML, CSS, and a little
+JavaScript. There is no framework and no build step, so what you see in these files is exactly what the browser gets.
 
 ## What's in the folder
 
-The design is a dark, minimal, four-page layout inspired by hemss.me, with your own content and a pixel
-background written from scratch.
-
 | File | What it does |
 | --- | --- |
-| `index.html` | About page: name, photo and short bio. |
-| `projects.html` | DiatoMeter, Nepalingo, SATitude, walden.life, each with a figure. |
-| `experience.html` | Incubate Nepal (links to the Nepalingo project), Lipi AI, education and certificates. |
-| `contact.html` | Email, LinkedIn, GitHub, résumé. Has the pixel mountains at the bottom. |
-| `styles.css` | How everything looks. Colors are "tokens" at the very top (like `--background`), so one change recolors the whole site, in light and dark mode. |
-| `site.js` | The theme button (system → light → dark) and the little notes that pop up over dashed phrases. |
-| `pixels.js` | The animated pixel background. Comments at the top explain how it works. |
-| `assets/` | Images, the résumé PDF, and the tab icon. |
+| `index.html` | The whole site: your name and photo, then nine chapters, ending with how to reach you. Each chapter is a `<section class="chapter">`; the words are plain paragraphs you can edit directly. |
+| `ink.js` | The ink drawings. Any `<canvas class="ink" data-scene="...">` gets that scene, which draws itself with brush strokes the first time you scroll to it. The handwritten label on each drawing is in `SCENES` near the bottom. |
+| `styles.css` | How everything looks. Colors are "tokens" at the very top (like `--background`), in light and dark mode. |
+| `site.js` | The theme button (system → light → dark). |
+| `pixels.js` | The animated dot pattern behind the top of the page. |
+| `assets/` | Your photo, project screenshots, certificate images, the résumé PDF, and the tab icon. |
 | `_headers` | Tells Cloudflare to have browsers re-check files before reusing saved copies, so edits show up right away. |
-| `archive/` | The first version of the site, kept as a backup on this computer only (not in Git, not published). |
+| `_redirects` | The site used to have separate pages; this forwards old links like `/projects` to the right chapter. |
+| `archive/` | The very first version of the site, kept as a backup on this computer only (not in Git, not published). |
 
-The header and the phone tab bar are copied into all four pages. If you rename a page or add one,
-change the menu in each file.
+## Adding a chapter
 
-## Adding your images
+Copy one `<section class="chapter">` block in `index.html`, change the number, date, title and paragraphs, and
+give it a new `id`. For a drawing, reuse a `data-scene` name from `SCENES` in `ink.js`; for a photo or
+screenshot, use a `<figure class="figure">` block like the ones in the Nepalingo or DiatoMeter chapters.
 
-- **Your photo:** replace `assets/photo.jpg` (currently a 1200 x 1200 square, shown up to 520px wide). Frame it
-  so there's room below your chin; a crop that ends at the chin looks like the head was cut off. If the new photo
-  has a different shape, update the `width` and `height` on its `<img>` in `index.html`.
-- **A project image:** copy the `<figure class="figure">` block from the DiatoMeter entry in `projects.html`,
-  point it at your new file in `assets/`, and number the caption Fig. 2.2, 2.3, and so on.
-- Keep images under about 500 KB so the pages load fast. On a Mac you can shrink one with
-  `sips -Z 1600 photo.jpg`.
+## Your photo
+
+Replace `assets/photo.jpg` (currently a 1200 x 1200 square, shown up to 520px wide). Frame it so there's room
+below your chin; a crop that ends at the chin looks like the head was cut off. If the new photo has a different
+shape, update the `width` and `height` on its `<img>` in `index.html`.
 
 ## See it on your own computer
 
@@ -66,6 +62,5 @@ Deployments** lists every version, and any earlier one can be put back with one 
 
 ## Keeping it up to date
 
-- New project: copy one of the `<article class="entry">` blocks in `projects.html` and change the words.
 - New résumé: replace `assets/aditya-thakur-resume.pdf` with the new PDF, keeping the same file name.
 - Different colors: change the tokens near the top of `styles.css` (one set for light mode, one for dark).
