@@ -337,78 +337,217 @@
     }
   }
 
-  // ---------------------------------------------------------------- scene 2: the library
-  var FX0 = 448, FX1 = 512, FY = 302, TOP = 214;
-
-  function shelfWall(t, side) {
-    function X(x) { return side > 0 ? x : W - x; }
-    var near = [-10, 70, 150, 230, 310, 390, 470, 560];
-    function farY(y) { return TOP + (y / 540) * (FY - TOP); }
-    function yAt(y, x) { return lerp(y, farY(y), x / FX0); }
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(X(0), -10); ctx.lineTo(X(FX0), TOP - 1); ctx.lineTo(X(FX0), FY); ctx.lineTo(X(56), 540); ctx.lineTo(X(0), 540);
-    ctx.closePath();
-    ctx.clip();
-
-    for (var s = 0; s < near.length; s++) {
-      brush(seg(X(0), near[s], X(FX0 - 2), farY(near[s]), 0.6), 2.2, prog(t, 0.3 + s * 0.05, 0.9), {});
+  // ---------------------------------------------------------------- scene: the road into Budhanilkantha School
+  // Drawn from a photo of the entrance: flagpoles along the left, a red-roofed building, the forested hills
+  // behind, big trees on the right, flower pots along the road, the BNKS sign, and Mirga (my deer plushie)
+  // sitting in the grass with its little Nepal flags.
+  function blobPts(cx, cy, rx, ry, k1, k2, n) {
+    var pts = [];
+    for (var i = 0; i <= n; i++) {
+      var a = (i / n) * Math.PI * 2;
+      var r = 1 + 0.09 * Math.sin(a * k1) + 0.05 * Math.sin(a * k2 + 1.3);
+      pts.push([cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r]);
     }
-    for (s = 0; s < near.length - 1; s++) {
-      for (var x = 6; x < FX0 - 6;) {
-        var depth = 1 - x / FX0, step = 3 + 15 * Math.pow(depth, 1.4);
-        var r1 = R(), r2 = R(), r3 = R(), r4 = R();
-        if (r1 > 0.1) {
-          var top = yAt(near[s], x), bot = yAt(near[s + 1], x), band = bot - top;
-          var y0 = top + band * (0.12 + r2 * 0.22), y1 = bot - band * 0.06;
-          var tilt = r3 < 0.07 ? (r4 - 0.5) * band * 0.4 : 0;
-          var bw = (1 + 6.5 * Math.pow(depth, 1.2)) * (0.6 + r4 * 0.6);
-          brush(seg(X(x + tilt), y0, X(x), y1, 0.3), bw, prog(t, 0.5 + depth * 2.4 + s * 0.04, 0.3), { taper: 0.08 });
-        }
-        x += step * (0.7 + r2 * 0.6);
-      }
-    }
-    ctx.restore();
+    return pts;
   }
 
-  function sLibrary(t) {
-    fill(rectPts(FX0 + 2, TOP, FX1 - FX0 - 4, FY - TOP, 0.8), PAPER, prog(t, 0.1, 0.6));
-    fill(closed([[56, 540], [904, 540], [FX1, FY], [FX0, FY]], 1.2), PAPER, prog(t, 0.25, 0.6));
-    shelfWall(t, 1);
-    shelfWall(t, -1);
+  function cloud(cx, cy, s, t, t0) {
+    var bumps = [[-62, 4, 24], [-30, -14, 32], [10, -24, 38], [50, -10, 30], [80, 4, 22]], outline = [];
+    bumps.forEach(function (bp, i) {
+      var arc = arcPts(cx + bp[0] * s, cy + bp[1] * s, bp[2] * s, bp[2] * s, i === 0 ? Math.PI * 0.85 : Math.PI * 1.1, i === bumps.length - 1 ? Math.PI * 2.15 : Math.PI * 1.9, 0.5);
+      outline = outline.concat(arc);
+    });
+    outline.push([cx + 98 * s, cy + 20 * s]);
+    outline.push([cx - 82 * s, cy + 20 * s]);
+    outline.push(outline[0]);
+    fill(outline, INK, 1, { still: true });
+    brush(outline, 2.2, prog(t, t0, 1.2), { dry: 0.35, taper: 0.03 });
+    brush(arcPts(cx + 4 * s, cy - 2 * s, 20 * s, 10 * s, 3.5, 5.5, 0.4), 1.4, prog(t, t0 + 0.8, 0.4), { alpha: 0.55 });
+    brush(arcPts(cx - 34 * s, cy + 6 * s, 14 * s, 7 * s, 3.6, 5.4, 0.4), 1.2, prog(t, t0 + 0.9, 0.4), { alpha: 0.45 });
+  }
 
-    for (var i = 0; i < 7; i++) {
-      brush(seg(56 + i * 141, 540, FX0 + i * (FX1 - FX0) / 6, FY, 0.7), 2.4, prog(t, 0.7 + i * 0.06, 0.6), { color: INK });
+  function treeBlob(cx, cy, rx, ry, t, t0, leaves) {
+    var outline = blobPts(cx, cy, rx, ry, 7, 13, 40);
+    fill(outline, INK, 1, { still: true });
+    brush(outline, 2.2, prog(t, t0, 1.2), { taper: 0.02 });
+    for (var i = 0; i < leaves; i++) {
+      var a = R() * Math.PI * 2, d = Math.sqrt(R()) * 0.82, x = cx + Math.cos(a) * rx * d, y = cy + Math.sin(a) * ry * d, s = 3 + R() * 4, a0 = R() * 6.3;
+      brush(arcPts(x, y, s, s * 0.8, a0, a0 + 3.8, 0.2), 1.2, prog(t, t0 + 0.6 + R() * 0.8, 0.2), { alpha: 0.6, taper: 0.3 });
     }
-    [0.12, 0.28, 0.5, 0.78].forEach(function (k, j) {
-      var y = FY + (540 - FY) * k, xl = lerp(FX0, 56, k), xr = lerp(FX1, 904, k);
-      brush(seg(xl + 6, y, xr - 6, y, 0.8), 1.4 + k * 2, prog(t, 1.1 + j * 0.08, 0.5), { color: INK });
+  }
+
+  function nepalFlag(px, py, dir, h, p) {
+    // the double pennant, hanging from a pole at (px, py), pointing left (dir = -1) or right (dir = 1)
+    var w = h * 0.72, shape = closed([[px, py], [px + dir * w, py + h * 0.5], [px + dir * w * 0.42, py + h * 0.5], [px + dir * w * 1.02, py + h], [px, py + h]], 0.2);
+    fill(shape, PAPER, p);
+    brush(shape, 1.2, p, { color: INK, taper: 0 });
+    brush(arcPts(px + dir * w * 0.3, py + h * 0.3, h * 0.08, h * 0.05, 0.2, Math.PI - 0.2, 0.1), 1.2, p, { color: INK, taper: 0 });
+    fill(circlePts(px + dir * w * 0.32, py + h * 0.72, h * 0.07, 0.1), INK, p);
+  }
+
+  function mirga(ox, oy, s, t, t0) {
+    // Mirga: my spotted deer plushie, lying down and facing left. A big head sitting almost on the body,
+    // a large shiny eye, short ears swept back, two stubby antler nubs, spots along the back, legs tucked
+    // forward with dark hooves, and the little gold stand with two Nepal flags in front.
+    function P(x, y) { return [ox + x * s, oy + y * s]; }
+    function Ps(list) { return list.map(function (p) { return P(p[0], p[1]); }); }
+    var a = prog(t, t0, 0.5), ln = prog(t, t0 + 0.2, 1.0);
+
+    fill(Ps(arcPts(48, 12, 24, 18, 0, Math.PI * 2, 0.3)), INK, a);                                        // hind leg
+    brush(Ps(arcPts(48, 12, 24, 18, -0.5, 2.6, 0.3)), 2.4 * s, ln, {});
+    var body = Ps(blobPts(8, 0, 66, 30, 2, 3, 30));
+    fill(body, INK, a);
+    brush(body, 2.6 * s, ln, { taper: 0.02 });
+    var spots = [[-22, -18], [-6, -24], [10, -26], [26, -25], [42, -20], [56, -12],
+                 [-12, -8], [4, -12], [20, -12], [36, -8], [50, -2], [12, 0]];
+    spots.forEach(function (sp, i) {
+      fill(Ps(circlePts(sp[0], sp[1] + (R() - 0.5) * 3, 3 + R() * 1.6, 0.2)), PAPER, prog(t, t0 + 0.8 + i * 0.03, 0.3));
     });
-
-    brush(seg(480, 0, 480, 104, 0.3), 1.6, prog(t, 0.2, 0.5), {});
-    fill(closed([[460, 104], [500, 104], [514, 126], [446, 126]], 0.5), PAPER, prog(t, 0.5, 0.4));
-    [-1, -0.35, 0.35, 1].forEach(function (k, j) {
-      brush(seg(480 + k * 24, 132, 480 + k * 70, 200, 0.6), 3, prog(t, 0.8 + j * 0.06, 0.4), { dry: 0.8, alpha: 0.85 });
+    brush(Ps(path([[-36, 20], [-72, 26], [-104, 30]], 0.3)), 13 * s, ln, { alpha: 0.85, taper: 0.1 });    // front legs
+    brush(Ps(path([[-26, 26], [-62, 33], [-92, 38]], 0.3)), 13 * s, ln, { alpha: 0.7, taper: 0.1 });
+    [[-108, 30], [-96, 38]].forEach(function (h) {                                                         // dark hooves
+      fill(Ps(arcPts(h[0], h[1], 9, 7, 0, Math.PI * 2, 0.1)), INK, a);
+      brush(Ps(arcPts(h[0], h[1], 9, 7, 0, Math.PI * 2, 0.1)), 1.6 * s, ln, {});
     });
+    brush(Ps(seg(72, -10, 84, -18, 0.2)), 4 * s, ln, {});                                                  // tail
 
-    // someone reading at the end of the aisle
-    var fa = prog(t, 1.2, 0.5);
-    fill(circlePts(474, 236, 7.5, 0.3), INK, fa);
-    fill(closed([[466, 246], [483, 246], [487, 300], [462, 300]], 0.4), INK, fa);
-    fill(rectPts(484, 255, 13, 10, 0.3), PAPER, fa);
-    brush(rectPts(484, 255, 13, 10, 0.3), 1, fa, { color: INK, taper: 0 });
-    var flip = (t * 0.8) % 1;
-    brush(seg(486 + flip * 9, 256, 486 + flip * 9, 264, 0.1), 1, fa, { color: INK, taper: 0 });
+    var neck = Ps(closed([[-50, -22], [-24, -24], [-34, -54], [-58, -56]], 0.3));
+    fill(neck, INK, a);
+    brush(Ps(seg(-56, -52, -50, -22, 0.2)), 2.2 * s, ln, {});
+    brush(Ps(path([[-42, -64], [-20, -82], [-28, -56]], 0.3)), 2.6 * s, ln, {});                            // ears, swept back
+    brush(Ps(path([[-56, -68], [-46, -90], [-38, -66]], 0.3)), 2.6 * s, ln, {});
+    brush(Ps(seg(-66, -66, -70, -86, 0.2)), 10 * s, ln, { alpha: 0.85, taper: 0.45 });                      // antler nubs
+    brush(Ps(seg(-54, -70, -52, -90, 0.2)), 10 * s, ln, { alpha: 0.85, taper: 0.45 });
+    var head = Ps(blobPts(-60, -46, 30, 24, 2, 3, 26));
+    fill(head, INK, a);
+    var snout = Ps(closed([[-80, -54], [-102, -42], [-98, -28], [-76, -30]], 0.3));
+    fill(snout, INK, a);
+    brush(head, 2.4 * s, ln, { taper: 0.02 });
+    brush(Ps(path([[-82, -56], [-102, -42], [-98, -28], [-78, -28]], 0.3)), 2.2 * s, ln, {});
+    fill(Ps(arcPts(-99, -36, 5, 4, 0, Math.PI * 2, 0.1)), PAPER, a);                                       // nose
+    fill(Ps(circlePts(-64, -50, 10, 0.1)), PAPER, a);                                                      // the big eye
+    fill(Ps(circlePts(-64, -50, 7.6, 0.1)), INK, a);
+    fill(Ps(circlePts(-60, -54, 2.6, 0.05)), PAPER, a);
 
-    // the library cat (tail last: it moves)
-    var ca = prog(t, 2.2, 0.5), cx = 560, cy = 470;
-    fill(arcPts(cx, cy, 22, 15, 0, Math.PI * 2, 0.5), INK, ca);
-    fill(circlePts(cx - 20, cy - 16, 10, 0.4), INK, ca);
-    fill(closed([[cx - 28, cy - 22], [cx - 26, cy - 34], [cx - 20, cy - 25]], 0.2), INK, ca);
-    fill(closed([[cx - 18, cy - 25], [cx - 12, cy - 34], [cx - 10, cy - 22]], 0.2), INK, ca);
-    var sw = Math.sin(t * 2.2) * 8;
-    brush(path([[cx + 20, cy + 4], [cx + 34, cy - 8], [cx + 38 + sw * 0.3, cy - 24], [cx + 32 + sw, cy - 34]], 0.3), 4, ca, { color: INK, taper: 0.5 });
+    var fp = prog(t, t0 + 1.0, 0.5);                                                                       // the flag stand
+    fill(Ps(rectPts(-62, 40, 46, 7, 0.1)), PAPER, fp);
+    brush(Ps(seg(-50, 40, -30, -30, 0.1)), 2.6 * s, fp, { taper: 0 });
+    brush(Ps(seg(-26, 40, -44, -28, 0.1)), 2.6 * s, fp, { taper: 0 });
+    fill(Ps(circlePts(-30, -34, 3.4, 0.1)), PAPER, fp);
+    fill(Ps(circlePts(-44, -32, 3.4, 0.1)), PAPER, fp);
+    var f1 = P(-44, -26), f2 = P(-30, -28);
+    nepalFlag(f1[0], f1[1], -1, 30 * s, fp);
+    nepalFlag(f2[0], f2[1], 1, 30 * s, fp);
+  }
+
+  function sSchool(t) {
+    cloud(330, 76, 1.15, t, 0.2);
+    cloud(600, 118, 0.8, t, 0.5);
+    cloud(120, 124, 0.7, t, 0.7);
+
+    // the forested hills behind (Shivapuri)
+    var hills = path([[0, 252], [90, 214], [200, 204], [300, 222], [380, 236], [470, 226], [560, 246], [640, 262], [720, 276]], 0.8);
+    fill(hills.concat([[720, 400], [0, 400]]), INK, 1, { still: true });
+    brush(hills, 2.4, prog(t, 0.3, 1.4), {});
+    for (var f = 0; f < 70; f++) {
+      var fx = R() * 690, fy = 236 + R() * 90 - (fx < 300 ? 18 : 0), fr = 3 + R() * 4;
+      brush(arcPts(fx, fy, fr, fr * 0.8, Math.PI * 1.1, Math.PI * 1.9, 0.2), 1.1, prog(t, 0.8 + R() * 1.0, 0.3), { alpha: 0.55, taper: 0.3 });
+    }
+
+    // trees in the middle distance, and the red-roofed building on the left
+    treeBlob(400, 300, 78, 62, t, 0.6, 24);
+    treeBlob(520, 296, 62, 56, t, 0.7, 20);
+    var rb = prog(t, 0.9, 0.8);
+    fill(closed([[60, 352], [100, 322], [270, 322], [294, 352]], 0.5), INK, 1, { still: true });
+    brush(closed([[60, 352], [100, 322], [270, 322], [294, 352]], 0.5), 2.4, rb, { taper: 0.02 });
+    for (var hr = 0; hr < 11; hr++) brush(seg(108 + hr * 16, 326, 98 + hr * 17, 348, 0.2), 1.4, prog(t, 1.2 + hr * 0.04, 0.2), { alpha: 0.75 });
+    brush(rectPts(72, 352, 210, 52, 0.5), 2, rb, { taper: 0.02 });
+    for (var wi = 0; wi < 4; wi++) brush(rectPts(90 + wi * 48, 366, 22, 22, 0.2), 1.4, prog(t, 1.4 + wi * 0.05, 0.3), { taper: 0.02 });
+
+    // the big trees on the right: trunks, then a full, lumpy canopy
+    brush(path([[936, 480], [910, 400], [880, 330], [846, 280]], 0.8), 9, prog(t, 1.0, 0.8), { taper: 0.25 });
+    brush(path([[960, 420], [946, 340], [930, 300]], 0.6), 6, prog(t, 1.1, 0.6), { taper: 0.3 });
+    brush(path([[880, 330], [830, 300], [790, 290]], 0.6), 3.6, prog(t, 1.3, 0.6), { taper: 0.3 });
+    treeBlob(940, 70, 300, 210, t, 0.4, 0);
+    treeBlob(700, 180, 120, 96, t, 0.6, 0);
+    treeBlob(830, 250, 110, 70, t, 0.7, 0);
+    for (var lf = 0; lf < 140; lf++) {
+      var lx = 600 + R() * 360, ly = R() * 320, ls = 3 + R() * 5, a0 = R() * 6.3;
+      var inside = (Math.pow((lx - 940) / 300, 2) + Math.pow((ly - 70) / 210, 2) < 0.8) || (Math.pow((lx - 700) / 120, 2) + Math.pow((ly - 180) / 96, 2) < 0.75) || (Math.pow((lx - 830) / 110, 2) + Math.pow((ly - 250) / 70, 2) < 0.7);
+      brush(arcPts(lx, ly, ls, ls * 0.8, a0, a0 + 3.8, 0.2), 1.2, inside ? prog(t, 1.0 + R() * 1.2, 0.2) : 0, { alpha: 0.55, taper: 0.3 });
+    }
+
+    // the road, with its painted edge lines
+    var road = closed([[110, 540], [840, 540], [622, 384], [466, 384]], 0.8);
+    fill(road, INK, 1, { still: true });
+    brush(path([[124, 540], [472, 386]], 0.6), 3.2, prog(t, 0.5, 1.0), { noStartTaper: true, taper: 0.6 });
+    brush(path([[824, 540], [616, 386]], 0.6), 3.2, prog(t, 0.6, 1.0), { noStartTaper: true, taper: 0.6 });
+    for (var rt = 0; rt < 14; rt++) {
+      var ry = 400 + R() * 135, rx = lerp(lerp(470, 140, (ry - 384) / 156), lerp(616, 810, (ry - 384) / 156), 0.15 + R() * 0.7);
+      brush(seg(rx, ry, rx + 6 + R() * 14, ry, 0.2), 1, prog(t, 1.4 + R() * 0.8, 0.3), { alpha: 0.35 });
+    }
+
+    // the road edge on the left: L(u) runs from the bottom-left corner to the far end of the road
+    function L(u) { return [lerp(-30, 456, u), lerp(604, 384, u)]; }
+    // flagpoles on the lawn behind the railing, nearest first; flags hang from the tops
+    for (var fpI = 0; fpI < 10; fpI++) {
+      var u = 0.2 + Math.pow(fpI / 9, 1.4) * 0.76, b = L(u);
+      var bx = b[0] - lerp(16, 4, u), by = b[1] - lerp(44, 8, u), top = by - lerp(430, 150, u);
+      var pp = prog(t, 1.0 + (9 - fpI) * 0.1, 0.5);
+      brush(seg(bx, by, bx, top, 0.3), lerp(1.8, 1, u), pp, { taper: 0.05, alpha: 0.75 });
+      var fw = lerp(24, 6, u), fh = lerp(70, 18, u), tone = 0.35 + R() * 0.6;
+      var flag = closed([[bx, top + 2], [bx - fw, top + 6], [bx - fw * 0.85, top + fh], [bx, top + fh * 0.94]], 0.4);
+      fill(flag, PAPER, pp * tone);
+      brush(flag, 1.2, pp, { taper: 0.02 });
+    }
+    // grass on the lawn
+    for (var gl = 0; gl < 36; gl++) {
+      var gu = R(), gb = L(gu), gx = gb[0] - 20 - R() * 120, gy = gb[1] - 30 - R() * 60;
+      brush(seg(gx, gy, gx + 2, gy - 5, 0.1), 1.2, prog(t, 1.6 + R() * 0.8, 0.2), { alpha: 0.6 });
+    }
+    // the low stone wall and the railing along the road
+    var wallTop = [], railTop = [], railMid = [];
+    for (var k = 0; k <= 10; k++) {
+      var uu = k / 10, q = L(uu);
+      wallTop.push([q[0], q[1] - lerp(44, 8, uu)]);
+      railTop.push([q[0] - lerp(10, 2, uu), q[1] - lerp(122, 22, uu)]);
+      railMid.push([q[0] - lerp(6, 1, uu), q[1] - lerp(84, 15, uu)]);
+    }
+    fill(wallTop.concat([L(1), L(0)]), INK, 1, { still: true });
+    brush(path(wallTop, 0.5), 2.4, prog(t, 1.4, 0.8), {});
+    brush(path(railTop, 0.5), 2, prog(t, 1.6, 0.8), {});
+    for (var pk = 0; pk < 12; pk++) {
+      var pu = Math.pow(pk / 11, 1.3), pq = L(pu);
+      brush(seg(pq[0] - lerp(10, 2, pu), pq[1] - lerp(122, 22, pu), pq[0], pq[1] - lerp(44, 8, pu), 0.2), lerp(3, 1, pu), prog(t, 1.8 + pk * 0.04, 0.3), { taper: 0.02 });
+    }
+
+    // the right side: a brick wall, a strip of grass, and flower pots on stands
+    brush(path([[960, 446], [820, 410], [700, 380]], 0.5), 2, prog(t, 1.5, 0.8), {});
+    brush(path([[960, 466], [820, 428], [700, 392]], 0.5), 1.4, prog(t, 1.6, 0.8), { alpha: 0.7 });
+    for (var pot = 0; pot < 10; pot++) {
+      var v = Math.pow(pot / 9, 1.4), px = lerp(930, 652, v), py = lerp(520, 386, v), ps = lerp(30, 7, v), pa = prog(t, 1.8 + (9 - pot) * 0.08, 0.4);
+      brush(closed([[px - ps * 0.5, py - ps], [px + ps * 0.5, py - ps], [px + ps * 0.36, py - ps * 0.2], [px - ps * 0.36, py - ps * 0.2]], 0.2), lerp(2, 1, v), pa, { taper: 0.02 });
+      brush(seg(px - ps * 0.3, py - ps * 0.2, px - ps * 0.4, py + ps * 0.3, 0.1), 1.2, pa, {});
+      brush(seg(px + ps * 0.3, py - ps * 0.2, px + ps * 0.4, py + ps * 0.3, 0.1), 1.2, pa, {});
+      for (var fl = 0; fl < 5; fl++) {
+        fill(circlePts(px + (fl - 2) * ps * 0.2, py - ps * (1.18 + (fl % 2) * 0.18), ps * 0.13, 0.1), PAPER, prog(t, 2.0 + (9 - pot) * 0.08, 0.3));
+      }
+    }
+
+    // the BNKS sign at the end of the road
+    var sa = prog(t, 2.2, 0.4);
+    brush(seg(604, 384, 604, 352, 0.2), 2, sa, {});
+    fill(rectPts(584, 330, 42, 24, 0.3), PAPER, sa);
+    hand("BNKS", 605, 348, 14, INK, "center", sa);
+
+    mirga(852, 482, 1.1, t, 2.6);
+
+    // someone walking up to school (last: the legs move)
+    var wa = prog(t, 1.8, 0.4), wx = 520, wy = 410, ph = reduceMotion ? 0 : Math.sin(t * 4) * 3;
+    fill(circlePts(wx, wy - 30, 3.6, 0.1), PAPER, wa);
+    fill(closed([[wx - 4, wy - 26], [wx + 4, wy - 26], [wx + 5, wy - 12], [wx - 5, wy - 12]], 0.1), PAPER, wa);
+    brush(seg(wx - 2, wy - 12, wx - 2 + ph, wy, 0.05), 2, wa, { taper: 0 });
+    brush(seg(wx + 2, wy - 12, wx + 2 - ph, wy, 0.05), 2, wa, { taper: 0 });
   }
 
   // ---------------------------------------------------------------- scene 3: night, writing code
@@ -529,7 +668,7 @@
   // ---------------------------------------------------------------- scene 5: flying to Lexington
   function sLexington(t) {
     stars(60, 0, 0, W, 250, t, 0);
-    var P0 = [40, 300], C = [470, 20], P1 = [920, 230];
+    var P0 = [30, 250], C = [480, -110], P1 = [930, 210];
     function bez(u) {
       var a = (1 - u) * (1 - u), b = 2 * (1 - u) * u, c = u * u;
       return [a * P0[0] + b * C[0] + c * P1[0], a * P0[1] + b * C[1] + c * P1[1]];
@@ -540,30 +679,79 @@
       brush(seg(A[0], A[1], B[0], B[1], 0.2), 1.6, u0 + 0.011 < pu ? 1 : 0, { taper: 0.2, alpha: 0.8 });
     }
 
-    var bx0 = 170, bx1 = 790, top = 262, base = 440;
-    fill(rectPts(bx0, top, bx1 - bx0, base - top, 0.8), INK, 1, { still: true });
-    brush(rectPts(bx0, top, bx1 - bx0, base - top, 0.8), 2.6, prog(t, 3.2, 1.2), { taper: 0.02 });
-    brush(seg(bx0 - 10, top, bx1 + 10, top, 0.5), 4, prog(t, 3.4, 0.8), {});
-    brush(seg(bx0 - 4, top + 12, bx1 + 4, top + 12, 0.5), 2, prog(t, 3.5, 0.8), {});
-    var pX0 = 380, pX1 = 580;
-    fill(rectPts(pX0 + 8, 318, pX1 - pX0 - 16, 122, 0.5), PAPER, prog(t, 4.2, 0.6) * 0.3);
-    brush(seg(pX0 - 6, 300, pX1 + 6, 300, 0.4), 3.4, prog(t, 3.8, 0.5), {});
-    brush(seg(pX0 - 2, 314, pX1 + 2, 314, 0.4), 2.4, prog(t, 3.9, 0.5), {});
-    for (var col = 0; col < 6; col++) {
-      var cx = pX0 + 12 + col * ((pX1 - pX0 - 24) / 5);
-      brush(seg(cx, 316, cx, 440, 0.3), 6, prog(t, 4.0 + col * 0.08, 0.4), { taper: 0.04 });
-    }
-    [[bx0 + 20, pX0 - 20], [pX1 + 20, bx1 - 20]].forEach(function (wing, wi) {
-      for (var rr = 0; rr < 2; rr++) {
-        for (var cc = 0; cc < 4; cc++) {
-          var wx = lerp(wing[0], wing[1] - 24, cc / 3), wy = 286 + rr * 74;
-          var lit = R() < 0.4, wp = prog(t, 4.4 + (wi * 8 + rr * 4 + cc) * 0.05, 0.3);
-          if (lit) fill(rectPts(wx, wy, 24, 34, 0.3), PAPER, wp * 0.9);
-          brush(rectPts(wx, wy, 24, 34, 0.3), 1.6, wp, { taper: 0.02 });
-        }
+    // Washington Hall, from a photo: red brick behind six giant white columns, a plain pediment,
+    // the white octagonal cupola with louvered openings and "Old George" standing on top,
+    // and the lower Colonnade buildings on either side with their rows of slim white columns.
+    var hx0 = 330, hx1 = 630, cxh = 480, base = 444;
+    [[118, 318], [642, 842]].forEach(function (wg, wi) {
+      var wTop = 318, wp = prog(t, 3.5 + wi * 0.2, 0.8);
+      fill(rectPts(wg[0], wTop, wg[1] - wg[0], base - wTop, 0.6), INK, 1, { still: true });
+      brush(seg(wg[0] - 6, wTop, wg[1] + 6, wTop, 0.5), 3, wp, {});
+      brush(seg(wg[0], wTop + 9, wg[1], wTop + 9, 0.4), 1.6, wp, { alpha: 0.8 });
+      for (var ww = 0; ww < 6; ww++) {
+        var wx = lerp(wg[0] + 16, wg[1] - 32, ww / 5), lit = R() < 0.45, wpp = prog(t, 4.3 + wi * 0.3 + ww * 0.05, 0.3);
+        fill(rectPts(wx, wTop + 44, 16, 30, 0.2), PAPER, lit ? wpp * 0.8 : 0);
+        brush(rectPts(wx, wTop + 44, 16, 30, 0.2), 1.3, wpp, { taper: 0.02 });
+      }
+      for (var cc = 0; cc < 9; cc++) {
+        var colx = lerp(wg[0] + 6, wg[1] - 6, cc / 8);
+        brush(seg(colx, wTop + 12, colx, base, 0.2), 4.4, prog(t, 3.9 + wi * 0.2 + cc * 0.04, 0.35), { taper: 0.03 });
       }
     });
 
+    // the cupola (drawn first, so the pediment hides its base)
+    var cu = prog(t, 4.6, 0.6);
+    fill(rectPts(cxh - 20, 124, 40, 56, 0.3), PAPER, cu);
+    for (var lv = 0; lv < 3; lv++) {
+      fill(rectPts(cxh - 15 + lv * 11, 138, 7, 26, 0.1), INK, cu);
+      for (var sl = 0; sl < 4; sl++) brush(seg(cxh - 15 + lv * 11, 142 + sl * 6, cxh - 8 + lv * 11, 142 + sl * 6, 0.05), 0.8, cu, { taper: 0 });
+    }
+    brush(seg(cxh - 20, 131, cxh + 20, 131, 0.1), 1, cu, { color: INK, taper: 0 });
+    fill(rectPts(cxh - 25, 117, 50, 8, 0.2), PAPER, cu);
+    fill(rectPts(cxh - 7, 108, 14, 9, 0.1), PAPER, cu);
+    // "Old George"
+    var og = prog(t, 5.0, 0.5);
+    fill(circlePts(cxh, 82, 4.2, 0.1), PAPER, og);
+    fill(closed([[cxh - 4, 87], [cxh + 4, 87], [cxh + 7, 108], [cxh - 7, 108]], 0.1), PAPER, og);
+    brush(seg(cxh + 4, 90, cxh + 9, 100, 0.05), 2, og, { taper: 0.1 });
+
+    // brick front, pediment and entablature
+    fill(rectPts(hx0 + 6, 252, hx1 - hx0 - 12, base - 252, 0.6), INK, 1, { still: true });
+    var ped = closed([[hx0 - 14, 228], [cxh, 172], [hx1 + 14, 228]], 0.6);
+    fill(ped, INK, 1, { still: true });
+    fill(ped, PAPER, prog(t, 3.6, 0.6) * 0.88);                                   // the pediment is white
+    brush(ped, 2.8, prog(t, 3.3, 1.0), { taper: 0.02 });
+    fill(rectPts(hx0 - 16, 229, hx1 - hx0 + 32, 24, 0.3), PAPER, prog(t, 3.6, 0.6) * 0.88);   // and so is the band below it
+    brush(seg(hx0 - 16, 230, hx1 + 16, 230, 0.4), 2, prog(t, 3.4, 0.7), { color: INK });
+    brush(seg(hx0 - 12, 241, hx1 + 12, 241, 0.4), 1.4, prog(t, 3.5, 0.7), { color: INK, alpha: 0.7 });
+    brush(seg(hx0 - 10, 252, hx1 + 10, 252, 0.4), 2.8, prog(t, 3.6, 0.7), {});
+    brush(rectPts(hx0 - 18, 222, 8, 8, 0.1), 1.4, prog(t, 3.6, 0.3), { taper: 0 });   // chimneys
+    brush(rectPts(hx1 + 10, 222, 8, 8, 0.1), 1.4, prog(t, 3.6, 0.3), { taper: 0 });
+
+    // windows on three floors in each bay, and the arched door in the middle
+    var colX = [0, 1, 2, 3, 4, 5].map(function (k) { return lerp(hx0 + 14, hx1 - 14, k / 5); });
+    for (var bay = 0; bay < 5; bay++) {
+      var bc = (colX[bay] + colX[bay + 1]) / 2;
+      for (var fl = 0; fl < 3; fl++) {
+        if (bay === 2 && fl === 2) continue;   // the door is here
+        var wy0 = 268 + fl * 58, litW = R() < 0.4, wpw = prog(t, 4.0 + bay * 0.06 + fl * 0.05, 0.3);
+        fill(rectPts(bc - 9, wy0, 18, 32, 0.2), PAPER, litW ? wpw * 0.85 : 0);
+        brush(rectPts(bc - 9, wy0, 18, 32, 0.2), 1.3, wpw, { taper: 0.02 });
+        brush(seg(bc, wy0, bc, wy0 + 32, 0.05), 0.8, wpw, { taper: 0, alpha: 0.7 });
+      }
+    }
+    brush(path([[cxh - 13, base], [cxh - 13, 404]].concat(arcPts(cxh, 404, 13, 13, Math.PI, Math.PI * 2, 0.2)).concat([[cxh + 13, 404], [cxh + 13, base]]), 0.3), 2, prog(t, 4.4, 0.5), { taper: 0.02 });
+
+    // six giant white columns
+    for (var col = 0; col < 6; col++) {
+      var x = colX[col], cp = prog(t, 3.7 + col * 0.09, 0.5);
+      brush(seg(x, 256, x, base - 6, 0.3), 12, cp, { taper: 0.02 });
+      brush(seg(x - 11, 256, x + 11, 256, 0.1), 4, cp, { taper: 0 });
+      fill(rectPts(x - 10, base - 7, 20, 7, 0.1), PAPER, cp);
+    }
+    // the brick path to the door
+    brush(path([[cxh - 16, base + 2], [cxh - 40, 540]], 0.4), 2, prog(t, 4.8, 0.5), {});
+    brush(path([[cxh + 16, base + 2], [cxh + 40, 540]], 0.4), 2, prog(t, 4.8, 0.5), {});
     brush(seg(0, 446, W, 440, 0.8), 2.4, prog(t, 3.3, 0.8), {});
     for (var g = 0; g < 70; g++) {
       var gx = R() * W, gy = 455 + R() * 80, gl = 5 + R() * 8 + (gy - 455) * 0.08;
@@ -803,7 +991,7 @@
       lines: ["aditya bikram thakur.", "math + cs at washington and lee.", "click, tap or press → to begin."] },
     { id: "pokhara", draw: sPokhara, seed: 11, anchor: "tl", enter: "wipe",
       lines: ["i grew up in pokhara, nepal.", "under machhapuchhre, the “fish tail” mountain."] },
-    { id: "school", draw: sLibrary, seed: 22, anchor: "tl", enter: "pan",
+    { id: "school", draw: sSchool, seed: 22, anchor: "tc", enter: "pan",
       lines: ["budhanilkantha school, kathmandu.", "a levels in physics, chemistry, computer science and math. A* in all four.", "valedictorian. 1600 on the sat."] },
     { id: "lipi-ai", draw: sStone, seed: 44, anchor: "bl", enter: "pan",
       lines: ["summer 2023: lipi ai.", "an app that reads tibetan inscriptions from a phone photo.", "i built the backend: splitting stacked letters so ocr can read them."] },
