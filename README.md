@@ -20,7 +20,7 @@ returns to the gallery, so nobody has to sit through anything they didn't pick.
 | `styles.css` | Makes the film fill the screen with no scrolling, and places the invisible real links over the drawn link boxes. |
 | `assets/` | The résumé PDF and the tab icon. (Older photos and screenshots are still here but no longer used.) |
 | `_headers` | Tells Cloudflare to have browsers re-check files before reusing saved copies, so edits show up right away. |
-| `_redirects` | Old links like `/projects` forward to the matching shot (for example `/#lipi-ai`). |
+| `_redirects` | Old links like `/projects` forward to the matching shot (for example `/#projects`). |
 | `archive/` | The very first version of the site, kept as a backup on this computer only (not in Git, not published). |
 
 ## Changing the words

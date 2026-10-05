@@ -255,23 +255,6 @@
     }
   }
 
-  // An abstract carved letter that hangs from a short top bar, in one of three body shapes, sometimes with
-  // a stacked mark below and a small dot after it (the dot that separates syllables in Tibetan).
-  // These suggest the look of the script; they are not real Tibetan letters.
-  function glyph(x, y, s, color, p) {
-    var r1 = R(), r2 = R(), r3 = R(), r4 = R(), v = Math.floor(R() * 3);
-    brush(seg(x - 12 * s, y - 20 * s, x + 12 * s, y - 20 * s, 0.4), 4.2 * s, p, { color: color, taper: 0.1 });
-    var body = v === 0
-      ? [[x + 2 * s, y - 20 * s], [x + (r1 - 0.5) * 6 * s, y + 4 * s], [x - 8 * s, y + 12 * s]]
-      : v === 1
-        ? [[x - 10 * s, y - 20 * s], [x - 10 * s, y + 6 * s], [x + 10 * s, y + 6 * s], [x + 10 * s, y - 8 * s]]
-        : [[x + 10 * s, y - 20 * s], [x - 6 * s, y - 6 * s], [x + 8 * s, y + 4 * s], [x - 4 * s, y + 14 * s]];
-    brush(path(body, 0.4), 4 * s, p, { color: color, taper: 0.15 });
-    brush(path([[x + 6 * s, y - 6 * s], [x + 12 * s, y + (r2 * 8 - 2) * s]], 0.3), 3.2 * s, v === 0 ? p : 0, { color: color });
-    brush(arcPts(x, y + 22 * s, 7 * s, 4 * s, 0.2, Math.PI - 0.2, 0.3), 3 * s, r3 < 0.5 ? p : 0, { color: color });
-    fill(circlePts(x + 21 * s, y - 19 * s, 2.4 * s, 0.1), color, r4 < 0.45 ? p : 0);
-  }
-
   function plane(x, y, ang, a) {
     var c = Math.cos(ang), s = Math.sin(ang);
     function S(x1, y1, x2, y2, w) {
@@ -298,8 +281,13 @@
   var ANNAPURNA = [[0, 284], [50, 252], [110, 234], [170, 216], [220, 200], [262, 176], [296, 190], [330, 170], [362, 152],
     [402, 166], [446, 184], [490, 194], [540, 190], [600, 184], [660, 192], [720, 180], [770, 172], [800, 158], [826, 140],
     [856, 152], [888, 168], [914, 158], [940, 172], [960, 178]];
-  var MACHHA = [[516, 266], [548, 226], [574, 192], [596, 152], [616, 114], [630, 86], [640, 66], [646, 60], [653, 72],
-    [665, 104], [681, 142], [699, 178], [719, 212], [745, 246], [772, 266]];
+  // Machhapuchhre as seen from Pokhara: a narrow spire with a slightly hooked tip and a step on its east ridge,
+  // standing on a broad massif whose ridges run out on both sides in jagged teeth.
+  var MACHHA = [[470, 266], [472, 248], [486, 240], [500, 232], [512, 226], [524, 222], [536, 214], [548, 208], [558, 198],
+    [568, 188], [578, 172], [592, 146], [606, 118], [620, 92], [632, 70], [640, 54], [645, 44], [650, 52], [656, 72],
+    [663, 94], [668, 100], [674, 114], [686, 138], [698, 156], [710, 166], [722, 172], [734, 170], [746, 180], [758, 180],
+    [770, 190], [784, 190], [798, 200], [814, 206], [832, 222], [852, 266]];
+  var MACHHA_TOP = 16;
   function treeTops(line, step, p, alpha) {
     var L = 0, i;
     for (i = 1; i < line.length; i++) L += Math.hypot(line[i][0] - line[i - 1][0], line[i][1] - line[i - 1][1]);
@@ -334,7 +322,7 @@
 
     // the Annapurna range: snow, with shadowed west faces and couloirs
     var ra = prog(t, 0.2, 1.4);
-    fill(ANNAPURNA.concat([[960, 300], [0, 300]]), PAPER, ra * 0.8, { still: true });
+    fill(ANNAPURNA.concat([[960, 300], [0, 300]]), PAPER, ra * 0.62, { still: true });
     brush(path(ANNAPURNA, 0.8), 2.2, ra, {});
     [[[262, 176], [222, 214], [254, 230]], [[362, 152], [318, 196], [352, 214]], [[826, 140], [780, 184], [816, 204]], [[914, 158], [884, 186], [906, 200]]].forEach(function (f, k) {
       fill(closed(f, 0.5), INK, prog(t, 0.8 + k * 0.1, 0.6) * 0.3);
@@ -343,13 +331,23 @@
       brush(seg(c[0], c[1], c[2], c[3], 1), 1.4, prog(t, 1.0 + k * 0.06, 0.5), { color: INK, alpha: 0.5, taper: 0.3 });
     });
 
-    // Machhapuchhre, nearer and taller: a sharp pyramid with its west face in shadow
+    // Machhapuchhre, nearer and taller: lit west face, shadowed east face, both fluted with snow ribs
     var ma = prog(t, 0.5, 1.2);
     fill(MACHHA, PAPER, ma * 0.96, { still: true });
-    fill(closed([[646, 60], [600, 150], [548, 226], [516, 266], [612, 266], [634, 150]], 0.5), INK, ma * 0.32);
-    brush(path(MACHHA, 0.6), 2.6, ma, {});
-    [[644, 72, 626, 150], [650, 84, 668, 168], [640, 96, 636, 200], [660, 120, 700, 214], [626, 128, 584, 222]].forEach(function (c, k) {
-      brush(seg(c[0], c[1], c[2], c[3], 1), 1.4, prog(t, 1.2 + k * 0.06, 0.5), { color: INK, alpha: 0.5, taper: 0.3 });
+    var rib = [[645, 44], [647, 90], [651, 160], [658, 266]];      // the central rib, where light meets shadow
+    fill(MACHHA.slice(MACHHA_TOP + 1).concat(rib.slice().reverse().slice(0, 3)), INK, ma * 0.36, { still: true });
+    brush(path(MACHHA, 0.5), 2.4, ma, { taper: 0.04 });
+    brush(path(rib, 0.4), 1.6, prog(t, 1.1, 0.6), { color: INK, alpha: 0.6, taper: 0.2 });
+    for (i = 0; i < 10; i++) {                                     // flutings on the lit face, running down to the rib
+      var u = (i + 0.5) / 10, sx = lerp(640, 578, u), sy = lerp(54, 172, u);
+      brush(seg(sx + 2, sy + 4, lerp(sx, 650, 0.45), sy + 50 + 40 * (1 - u), 0.6), 1.2, prog(t, 1.2 + i * 0.04, 0.4), { color: INK, alpha: 0.4, taper: 0.3 });
+    }
+    for (i = 0; i < 9; i++) {                                      // snow ribs catching light on the shadowed face
+      var v = (i + 0.5) / 9, ex = lerp(650, 710, v), ey = lerp(52, 166, v);
+      brush(seg(ex - 2, ey + 4, lerp(ex, 654, 0.4), ey + 44 + 30 * (1 - v), 0.6), 1.2, prog(t, 1.3 + i * 0.04, 0.4), { alpha: 0.45, taper: 0.3 });
+    }
+    [[512, 226], [536, 214], [558, 198], [734, 170], [758, 180], [784, 190], [814, 206]].forEach(function (j, k) {   // gullies under the teeth
+      brush(seg(j[0], j[1] + 3, j[0] + (k < 3 ? 4 : -4), j[1] + 26, 0.4), 1.2, prog(t, 1.4 + k * 0.04, 0.3), { color: INK, alpha: 0.45, taper: 0.3 });
     });
 
     // forested foothills with terraced slopes
@@ -709,50 +707,6 @@
     }
   }
 
-  // ---------------------------------------------------------------- scene 4: reading stone (Lipi AI)
-  function sStone(t) {
-    var sx0 = 120, sy0 = 100, sx1 = 500, sy1 = 450;
-    fill(closed([[sx0 + 30, sy0], [sx1 - 40, sy0 + 8], [sx1, sy0 + 50], [sx1 - 8, sy1 - 30], [sx1 - 50, sy1],
-      [sx0 + 26, sy1 - 6], [sx0, sy1 - 60], [sx0 + 6, sy0 + 46]], 2.2), PAPER, prog(t, 0.1, 0.5));
-    for (var sp = 0; sp < 40; sp++) {
-      var px = lerp(sx0 + 30, sx1 - 30, R()), py = lerp(sy0 + 30, sy1 - 30, R());
-      brush(seg(px, py, px + 3 + R() * 6, py + (R() - 0.5) * 3, 0.2), 1, prog(t, 0.4, 0.4), { color: INK, alpha: 0.35 });
-    }
-    var idx = 0;
-    for (var row = 0; row < 4; row++) {
-      for (var c = 0; c < 6; c++) {
-        glyph(180 + c * 52 + (R() - 0.5) * 6, 170 + row * 72, 1, INK, prog(t, 0.6 + idx * 0.06, 0.25));
-        idx++;
-      }
-    }
-    var scan = prog(t, 2.2, 2.0);
-    if (scan > 0 && scan < 1) {
-      var ys = lerp(sy0 + 12, sy1 - 12, scan);
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = INK;
-      for (var dx = sx0 + 14; dx < sx1 - 14; dx += 14) ctx.fillRect(dx, ys, 8, 2);
-      ctx.globalAlpha = 1;
-    }
-
-    var ox = 280 * (1 - easeOut(prog(t, 1.4, 1.0)));
-    var px0 = 600 + ox, py0 = 70, pw = 210, ph = 410;
-    brush(roundRectPts(px0, py0, pw, ph, 28), 3.6, prog(t, 1.4, 0.8), { taper: 0.02 });
-    brush(seg(px0 + 80, py0 + 18, px0 + 130, py0 + 18, 0.2), 3, prog(t, 1.8, 0.3), {});
-    fill(closed([[px0 + 28, py0 + 60], [px0 + 182, py0 + 66], [px0 + 186, py0 + 200], [px0 + 24, py0 + 206]], 1), PAPER, prog(t, 2.0, 0.4));
-    var mi = 0;
-    for (var r2 = 0; r2 < 3; r2++) {
-      for (var c2 = 0; c2 < 4; c2++) {
-        var gx = px0 + 52 + c2 * 36, gy = py0 + 98 + r2 * 40;
-        glyph(gx, gy, 0.42, INK, prog(t, 2.2 + mi * 0.03, 0.2));
-        brush(rectPts(gx - 14, gy - 16, 28, 30, 0.3), 1.4, prog(t, 3.0 + mi * 0.14, 0.25), { color: INK, taper: 0.02 });
-        mi++;
-      }
-    }
-    for (var ln = 0; ln < 4; ln++) {
-      brush(seg(px0 + 30, py0 + 280 + ln * 22, px0 + 140 + R() * 30, py0 + 280 + ln * 22, 0.3), 2.6, prog(t, 5.0 + ln * 0.25, 0.3), {});
-    }
-  }
-
   // ---------------------------------------------------------------- scene 5: flying to Lexington
   function sLexington(t) {
     stars(60, 0, 0, W, 250, t, 0);
@@ -1077,24 +1031,54 @@
 
   function sCards(t) {
     var i;
-    // the mascot: Nepalingo's crimson bird, on a pale pink blob like the login page
-    var ba = prog(t, 0.3, 0.8), bx = 236, by = 500;
-    function B(p) { return [bx + p[0], by + p[1]]; }
-    brush(seg(40, 500, 440, 500, 0.6), 2, prog(t, 0.1, 0.8), { alpha: 0.7 });
-    fill(blobPts(bx - 6, by - 104, 96, 82, 2, 3, 30), "#f2b8c6", ba * 0.3);
-    brush(seg(bx - 12, by - 52, bx - 14, by - 4, 0.3), 5, ba, { color: N_RED });                       // legs
-    brush(seg(bx + 8, by - 52, bx + 10, by - 4, 0.3), 5, ba, { color: N_RED });
-    brush(seg(bx - 26, by - 2, bx - 4, by - 2, 0.2), 4, ba, { color: PAPER, alpha: 0.8 });
-    brush(seg(bx - 2, by - 2, bx + 20, by - 2, 0.2), 4, ba, { color: PAPER, alpha: 0.8 });
-    fill(blobPts(bx - 4, by - 80, 44, 32, 2, 3, 26), N_RED, ba);                                     // body
-    fill(closed([[-46, -80], [-24, -100], [10, -100], [30, -84], [4, -68], [-28, -66]].map(B), 0.5), "#3a1418", ba);   // wing
-    brush(path([[10, -98], [16, -122], [22, -140]].map(B), 0.4), 18, ba, { color: N_RED, taper: 0 });   // neck
-    fill(circlePts(bx + 22, by - 152, 19, 0.3), N_RED, ba);                                           // head
-    fill(closed([[38, -156], [58, -148], [38, -140]].map(B), 0.2), "#a82434", ba);                  // beak
-    for (i = 0; i < 3; i++) brush(path([[14 - i * 4, -168], [4 - i * 8, -184 + i * 4], [-6 - i * 10, -188 + i * 8]].map(B), 0.3), 1.6, prog(t, 0.9 + i * 0.1, 0.4), { color: PAPER, alpha: 0.8, taper: 0.3 });
-    fill(circlePts(bx + 28, by - 156, 9, 0.1), PAPER, ba);                                           // the big eye
-    var look = reduceMotion ? 0 : Math.sin(t * 0.9) * 2.5;
-    fill(circlePts(bx + 30 + look, by - 156, 4.5, 0.05), INK, ba);
+    // the mascot: Nepalingo's bird, drawn after the app's own artwork (coordinates are in that image's pixels)
+    var ba = prog(t, 0.3, 0.8), ms = 0.21, mox = 236, moy = 512;
+    function M(x, y) { return [mox + (x - 790) * ms, moy + (y - 1273) * ms]; }
+    function Mc(x, y, r) { var c = M(x, y); return circlePts(c[0], c[1], r * ms, 0.1); }
+    function capsule(x1, y1, x2, y2, w) {   // a rounded bar, in image pixels
+      var a = Math.atan2(y2 - y1, x2 - x1), r = w / 2, pts = [], k;
+      for (k = 0; k <= 10; k++) { var q = a - Math.PI / 2 - (Math.PI * k) / 10; pts.push(M(x1 + Math.cos(q) * r, y1 + Math.sin(q) * r)); }
+      for (k = 0; k <= 10; k++) { var q2 = a + Math.PI / 2 - (Math.PI * k) / 10; pts.push(M(x2 + Math.cos(q2) * r, y2 + Math.sin(q2) * r)); }
+      return pts;
+    }
+    function halfDisc(cx, cy, r) {          // the half of a disc below a chord tilted like the bird's back
+      var a0 = Math.atan2(-252, 556), pts = [];
+      for (var k = 0; k <= 30; k++) { var q = a0 + (Math.PI * k) / 30; pts.push(M(cx + Math.cos(q) * r, cy + Math.sin(q) * r)); }
+      return pts;
+    }
+    var BLOB = [[890, 232], [1120, 290], [1290, 470], [1362, 720], [1300, 960], [1060, 1170], [760, 1310], [470, 1270], [280, 1120], [212, 910], [290, 690], [500, 500], [700, 320]], blob = [];
+    for (i = 0; i < BLOB.length; i++) {      // a smooth closed curve through the blob's points
+      var p0 = BLOB[(i - 1 + BLOB.length) % BLOB.length], p1 = BLOB[i], p2 = BLOB[(i + 1) % BLOB.length], p3 = BLOB[(i + 2) % BLOB.length];
+      for (var sgi = 0; sgi < 8; sgi++) {
+        var uu = sgi / 8, u2 = uu * uu, u3 = u2 * uu;
+        blob.push(M(0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * uu + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3),
+                    0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * uu + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3)));
+      }
+    }
+    var CRIMSON = "#b33640", BLACK = "#1b1b1b";
+    fill(blob, "#f7d7e5", ba);
+    fill(capsule(752, 1030, 757, 1190, 64), CRIMSON, ba);              // legs
+    fill(capsule(882, 980, 886, 1132, 64), CRIMSON, ba);
+    fill(capsule(744, 1254, 838, 1254, 40), BLACK, ba);               // feet
+    fill(capsule(882, 1197, 978, 1197, 40), BLACK, ba);
+    fill(halfDisc(718, 684, 365), CRIMSON, ba);                        // the body
+    fill([M(944, 300), M(1066, 300), M(1066, 600), M(944, 600)], CRIMSON, ba);   // the neck
+    fill(halfDisc(655, 649, 305), BLACK, ba);                          // the wing
+    fill(Mc(1015, 312, 76), CRIMSON, ba);                              // the head
+    fill([M(1060, 296), M(1112, 300), M(1148, 322), M(1074, 334)], BLACK, ba);   // the beak
+    fill(Mc(1074, 315, 20), BLACK, ba);
+    fill(Mc(990, 284, 45), "#ffffff", ba);                             // the big eye
+    fill(Mc(996, 326, 28), CRIMSON, ba);                               // its lower lid
+    var look = reduceMotion ? 0 : Math.sin(t * 0.9) * 5;
+    fill(Mc(992 + look, 286, 22), BLACK, ba);
+    fill(Mc(982 + look, 276, 8), "#ffffff", ba);
+    brush([M(936, 278), M(940, 258), M(958, 238)], 1.4, ba, { color: BLACK, taper: 0.2 });   // an eyelash
+    brush([M(1022, 346), M(1036, 354), M(1050, 346)], 1.4, ba, { color: BLACK, taper: 0.2 }); // a smile
+    [[1050, 245, 927, 128], [1046, 246, 896, 159], [1040, 248, 875, 189]].forEach(function (c) {   // the crest
+      var pts = [];
+      for (var k = 0; k <= 8; k++) { var w = k / 8; pts.push(M(lerp(c[0], c[2], w) + Math.sin(w * Math.PI) * 30, lerp(c[1], c[3], w) - Math.sin(w * Math.PI) * 26)); }
+      brush(pts, 1.2, ba, { color: CRIMSON, taper: 0.1 });
+    });
 
     // the app window
     var wa = prog(t, 0.1, 0.8);
@@ -1419,8 +1403,7 @@
       lines: ["where i’ve learned and worked.", "pick one to know more."],
       items: [
         { id: "courses", label: "courses · 2025", aria: "Open my 2025 courses" },
-        { id: "nepalingo", label: "nepalingo · 2024", aria: "Open Nepalingo" },
-        { id: "lipi-ai", label: "lipi ai · 2023", aria: "Open Lipi AI" }
+        { id: "nepalingo", label: "nepalingo · 2024", aria: "Open Nepalingo" }
       ] },
     words: { draw: sGallery, seed: 152, anchor: "tc",
       lines: ["words that give meaning to my life.", "pick one."],
@@ -1457,8 +1440,6 @@
         { label: "nepalingo ↗", href: "https://nepalingo.com", aria: "Visit Nepalingo", ext: true },
         { label: "source ↗", href: "https://github.com/nepalcodes/nepalingo", aria: "Nepalingo source code on GitHub", ext: true }
       ] },
-    "lipi-ai": { draw: sStone, seed: 44, anchor: "bl",
-      lines: ["summer 2023: student research council nepal.", "lipi ai: an app that reads tibetan inscriptions from a phone photo.", "i built the backend: splitting stacked letters so ocr can read them."] },
 
     // words that give meaning to my life
     walden: { draw: sWoods, seed: 130, anchor: "tc",
@@ -1492,7 +1473,7 @@
   var TRACKS = {
     main: ["title", "pokhara", "school", "lexington", "today"],
     projects: ["projects", "diatometer", "summer-builds"],
-    experience: ["experience", "courses", "nepalingo", "lipi-ai"],
+    experience: ["experience", "courses", "nepalingo"],
     words: ["words", "walden", "penguins"],
     resume: ["resume"]
   };
