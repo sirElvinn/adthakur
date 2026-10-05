@@ -638,15 +638,15 @@
 
   // ---------------------------------------------------------------- scene 3: night, writing code
   function sNight(t) {
-    var wx = 80, wy = 56, ww = 240, wh = 220;
+    var wx = 104, wy = 248, ww = 220, wh = 132;
     stars(16, wx + 12, wy + 12, wx + ww - 12, wy + wh - 12, t, 0.3);
-    fill(circlePts(wx + 168, wy + 62, 22, 0.4), PAPER, prog(t, 0.6, 0.5));
-    fill(circlePts(wx + 178, wy + 55, 20, 0.4), INK, prog(t, 0.6, 0.5));
+    fill(circlePts(wx + 160, wy + 40, 18, 0.4), PAPER, prog(t, 0.6, 0.5));
+    fill(circlePts(wx + 168, wy + 34, 16, 0.4), INK, prog(t, 0.6, 0.5));
     brush(rectPts(wx, wy, ww, wh, 0.8), 3.4, prog(t, 0.1, 1.2), { taper: 0.03 });
     brush(seg(wx + ww / 2, wy, wx + ww / 2, wy + wh, 0.6), 2.4, prog(t, 0.8, 0.5), {});
     brush(seg(wx, wy + wh / 2, wx + ww, wy + wh / 2, 0.6), 2.4, prog(t, 0.9, 0.5), {});
 
-    var ccx = 420, ccy = 112;
+    var ccx = 892, ccy = 150;
     brush(circlePts(ccx, ccy, 30, 0.5), 2.6, prog(t, 0.5, 0.8), { taper: 0.05 });
     var hA = ((2 + 7 / 60) / 12) * Math.PI * 2 - Math.PI / 2, mA = (7 / 60) * Math.PI * 2 - Math.PI / 2;
     brush(seg(ccx, ccy, ccx + Math.cos(hA) * 15, ccy + Math.sin(hA) * 15, 0.2), 3, prog(t, 1.1, 0.3), {});
@@ -819,6 +819,15 @@
     plane(pp[0], pp[1], Math.atan2(pq[1] - pp[1], pq[0] - pp[0]), pu > 0 && pu < 1 ? 1 : 0);
   }
 
+  // ---------------------------------------------------------------- a monitor's stand, and the desk it sits on
+  function monitorDesk(cx, winBottom, deskY, t, x0, x1) {
+    var a = prog(t, 0.1, 0.8);
+    fill(rectPts(cx - 16, winBottom, 32, deskY - winBottom - 5, 0.2), INK, 1, { still: true });
+    brush(rectPts(cx - 16, winBottom, 32, deskY - winBottom - 5, 0.2), 1.6, a, { taper: 0.03 });
+    brush(path([[cx - 62, deskY], [cx - 50, deskY - 6], [cx + 50, deskY - 6], [cx + 62, deskY]], 0.3), 2, a, { taper: 0.05 });
+    brush(seg(x0, deskY, x1, deskY, 0.6), 2.4, prog(t, 0.1, 1), { taper: 0.03 });
+  }
+
   // ---------------------------------------------------------------- scene 6: DiatoMeter
   // Drawn after the app's results screen: an SEM image of Didymo frustules (club-shaped glass shells) on a mat
   // of debris. A scan sweeps across, and the app traces each shell in colour: green intact, amber cracked,
@@ -969,13 +978,13 @@
   // ---------------------------------------------------------------- scene 7: the road on
   function sEnd(t) {
     stars(50, 0, 0, W, 230, t, 0);
-    var ridge = RIDGE.map(function (p) { return [200 + p[0] * 0.47, 190 + p[1] * 0.55]; });
-    fill(path(ridge, 0.6).concat([[764, 292], [200, 292]]), INK, 1, { still: true });
+    var ridge = RIDGE.map(function (p) { return [350 + p[0] * 0.47, 190 + p[1] * 0.55]; });
+    fill(path(ridge, 0.6).concat([[914, 292], [350, 292]]), INK, 1, { still: true });
     brush(path(ridge, 0.6), 2.4, prog(t, 0.2, 1.8), {});
     snow(ridge, t, 1.2, 0.6, 236);
     brush(seg(0, 292, W, 292, 0.6), 1.6, prog(t, 0.3, 1.2), { alpha: 0.8 });
 
-    var roadPts = path([[470, 560], [430, 500], [520, 440], [455, 380], [505, 330], [478, 292]], 1.2);
+    var roadPts = path([[620, 560], [580, 500], [670, 440], [605, 380], [655, 330], [628, 292]], 1.2);
     brush(roadPts, 30, prog(t, 0.6, 2.4), { noStartTaper: true, taper: 0.9 });
     for (var g = 0; g < 40; g++) {
       var gx = R() * W, gy = 320 + R() * 220, gl = 4 + (gy - 300) * 0.05;
@@ -1032,7 +1041,7 @@
   function sCards(t) {
     var i;
     // the mascot: Nepalingo's bird, drawn after the app's own artwork (coordinates are in that image's pixels)
-    var ba = prog(t, 0.3, 0.8), ms = 0.21, mox = 236, moy = 512;
+    var ba = prog(t, 0.3, 0.8), ms = 0.16, mox = 410, moy = 470;
     function M(x, y) { return [mox + (x - 790) * ms, moy + (y - 1273) * ms]; }
     function Mc(x, y, r) { var c = M(x, y); return circlePts(c[0], c[1], r * ms, 0.1); }
     function capsule(x1, y1, x2, y2, w) {   // a rounded bar, in image pixels
@@ -1057,6 +1066,7 @@
     }
     var CRIMSON = "#b33640", BLACK = "#1b1b1b";
     fill(blob, "#f7d7e5", ba);
+    fill(rectPts(300, 470, 240, 14, 0.1), INK, 1, { still: true });   // the desk cuts the blob off flat
     fill(capsule(752, 1030, 757, 1190, 64), CRIMSON, ba);              // legs
     fill(capsule(882, 980, 886, 1132, 64), CRIMSON, ba);
     fill(capsule(744, 1254, 838, 1254, 40), BLACK, ba);               // feet
@@ -1080,7 +1090,8 @@
       brush(pts, 1.2, ba, { color: CRIMSON, taper: 0.1 });
     });
 
-    // the app window
+    // the app window, on a monitor stand on the desk
+    monitorDesk(708, 440, 470, t, 60, 940);
     var wa = prog(t, 0.1, 0.8);
     fill(rectPts(480, 36, 456, 404, 0.6), "#171614", wa, { still: true });
     brush(rectPts(480, 36, 456, 404, 0.8), 2, wa, { taper: 0.02 });
@@ -1130,11 +1141,11 @@
     });
 
     // eleven merged pull requests
-    brush(seg(500, 492, 920, 492, 0.4), 2, prog(t, 2.8, 1.2), {});
+    brush(seg(500, 518, 920, 518, 0.4), 2, prog(t, 2.8, 1.2), {});
     for (var m = 0; m < 11; m++) {
       var mx = 516 + m * 38, mp = prog(t, 3.0 + m * 0.12, 0.25);
-      brush(path([[mx - 22, 470], [mx - 8, 473], [mx, 488]], 0.2), 1.6, mp, { alpha: 0.8 });
-      fill(circlePts(mx, 492, 4.5, 0.2), PAPER, mp);
+      brush(path([[mx - 22, 496], [mx - 8, 499], [mx, 514]], 0.2), 1.6, mp, { alpha: 0.8 });
+      fill(circlePts(mx, 518, 4.5, 0.2), PAPER, mp);
     }
 
     // the flashcard's buttons: don't know / show / know it
@@ -1167,59 +1178,217 @@
     brush(card, 1.6, prog(t, 0.8, 0.6), { taper: 0.02, alpha: 0.6 });
   }
 
-  // ---------------------------------------------------------------- summer 2026: Thoreau's cabin (walden.life) and an answer sheet (SATitude)
-  function sSummer(t) {
-    brush(seg(40, 330, 480, 330, 0.6), 2, prog(t, 0.2, 0.8), {});
-    var pond = arcPts(250, 384, 150, 34, 0, Math.PI * 2, 0.8);
-    fill(pond, PAPER, prog(t, 0.5, 0.5) * 0.16);
-    brush(pond, 2.2, prog(t, 0.5, 1), { taper: 0.04 });
-    for (var r = 0; r < 6; r++) {
-      brush(seg(162 + r * 30, 380 + (r % 2) * 10, 190 + r * 30, 380 + (r % 2) * 10, 0.3), 1.4, prog(t, 1.2 + r * 0.06, 0.3), { alpha: 0.7 });
+  // ---------------------------------------------------------------- walden.life, drawn after the site
+  // A day's page on the screen, turning one day at a time, and the site's map of Walden Pond pinned on the wall
+  // beside it: the pond's coves, the woods around it, the railroad, and Thoreau's cabin site.
+  var W_OLIVE = "#5f6e40", W_GREY = "#8a857b";
+  var WALDEN_DAYS = [
+    ["day 1", "Friday, July 4, 1845", ["thoreau moves into his unfinished cabin", "at walden pond on independence day."]],
+    ["day 2", "Saturday, July 5, 1845", ["first full day at the pond."]],
+    ["day 3", "Sunday, July 6, 1845", ["first morning waking at walden."]]
+  ];
+  var POND = [[42, 120], [50, 96], [72, 84], [95, 88], [110, 96], [104, 74], [112, 60], [130, 52], [150, 44], [172, 52], [190, 62],
+    [206, 58], [226, 56], [244, 66], [254, 82], [258, 100], [270, 104], [284, 112], [286, 128], [276, 140], [262, 138], [256, 146],
+    [260, 162], [252, 176], [236, 180], [222, 172], [212, 160], [196, 152], [176, 148], [156, 140], [136, 130], [116, 124], [100, 136],
+    [84, 148], [64, 150], [48, 140]].map(function (p) { return [p[0] * 0.86 + 12, p[1] * 0.86 + 12]; });
+  function inPoly(x, y, poly) {
+    var inside = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      if ((poly[i][1] > y) !== (poly[j][1] > y) && x < ((poly[j][0] - poly[i][0]) * (y - poly[i][1])) / (poly[j][1] - poly[i][1]) + poly[i][0]) inside = !inside;
     }
-    var ca = prog(t, 0.8, 0.8);
-    brush(rectPts(300, 272, 70, 58, 0.5), 2.4, ca, { taper: 0.03 });
-    brush(path([[292, 274], [335, 238], [378, 274]], 0.4), 2.6, ca, {});
-    brush(rectPts(328, 298, 16, 32, 0.3), 1.8, ca, { taper: 0.03 });
-    brush(seg(356, 252, 356, 232, 0.2), 3, ca, {});
-    [[70, 330, 80], [108, 330, 64], [146, 330, 92], [420, 330, 78], [454, 330, 60]].forEach(function (tr, k) {
-      var tp = prog(t, 1.0 + k * 0.1, 0.5);
-      brush(seg(tr[0], tr[1], tr[0], tr[1] - tr[2], 0.3), 2, tp, {});
-      for (var b = 0; b < 4; b++) {
-        var by = tr[1] - tr[2] * (0.25 + b * 0.2), bw = tr[2] * (0.32 - b * 0.06);
-        brush(path([[tr[0] - bw, by + 6], [tr[0], by - 8], [tr[0] + bw, by + 6]], 0.3), 1.8, tp, {});
+    return inside;
+  }
+  function serif(str, x, y, size, color, alpha, italic, align) {
+    if (alpha <= 0) return;
+    ctx.globalAlpha = alpha;
+    ctx.font = (italic ? "italic " : "") + size + "px Georgia, 'Times New Roman', serif";
+    ctx.fillStyle = color;
+    ctx.textAlign = align || "left";
+    ctx.fillText(str, x, y);
+    ctx.globalAlpha = 1;
+  }
+
+  function sWaldenLife(t) {
+    var i;
+    // the map, pinned on the wall
+    var mpa = prog(t, 0.3, 0.6), MX0 = 148, MY0 = 272, MSc = 0.86, MR = -0.03;
+    function Mp(x, y) { var px = x * MSc, py = y * MSc; return [MX0 + px * Math.cos(MR) - py * Math.sin(MR), MY0 + px * Math.sin(MR) + py * Math.cos(MR)]; }
+    function Ml(list) { return list.map(function (p) { return Mp(p[0], p[1]); }); }
+    fill(Ml([[0, 0], [300, 0], [300, 200], [0, 200]]), "#efe6cf", mpa);
+    brush(Ml([[0, 0], [300, 0], [300, 200], [0, 200], [0, 0]]), 1.6, mpa, { taper: 0.02 });
+    for (i = 0; i < 90; i++) {                                     // the woods, as little tree marks
+      var tx = 8 + R() * 284, ty = 8 + R() * 184, tr = 3 + R() * 2.5;
+      if (inPoly(tx, ty, POND) || inPoly(tx, ty + 6, POND)) continue;
+      var tc = Mp(tx, ty);
+      brush(arcPts(tc[0], tc[1], tr * MSc, tr * MSc * 0.85, Math.PI * 0.9, Math.PI * 2.1, 0.2), 1.1, prog(t, 0.8 + i * 0.008, 0.3), { color: "#6f7d52", alpha: 0.8, taper: 0.2 });
+    }
+    brush(path(Ml([[0, 58], [60, 38], [140, 24], [220, 28], [300, 48]]), 0.4), 1.2, prog(t, 0.7, 0.6), { color: "#7a6a52", alpha: 0.8 });   // the road to Concord
+    var rail = Ml([[268, 200], [300, 92]]);
+    brush(seg(rail[0][0] - 3, rail[0][1], rail[1][0] - 3, rail[1][1], 0.2), 1, prog(t, 0.9, 0.5), { color: INK, alpha: 0.8, taper: 0 });
+    brush(seg(rail[0][0] + 3, rail[0][1], rail[1][0] + 3, rail[1][1], 0.2), 1, prog(t, 0.9, 0.5), { color: INK, alpha: 0.8, taper: 0 });
+    for (i = 0; i < 12; i++) {                                     // the railroad's ties
+      var rp = [lerp(rail[0][0], rail[1][0], (i + 0.5) / 12), lerp(rail[0][1], rail[1][1], (i + 0.5) / 12)];
+      brush(seg(rp[0] - 5, rp[1] - 1, rp[0] + 5, rp[1] + 1, 0.1), 1, prog(t, 1.0 + i * 0.02, 0.2), { color: INK, alpha: 0.7, taper: 0 });
+    }
+    var pond = Ml(POND);
+    fill(pond, "#b9d3d6", prog(t, 0.6, 0.5));
+    brush(pond.concat([pond[0]]), 1.4, prog(t, 0.6, 0.9), { color: "#4f6d73", taper: 0.02 });
+    var cab = Mp(232, 44);                                          // Thoreau's cabin site
+    fill(rectPts(cab[0] - 4, cab[1] - 2, 8, 6, 0.1), "#8a4b32", prog(t, 1.3, 0.3));
+    fill(closed([[cab[0] - 6, cab[1] - 2], [cab[0], cab[1] - 7], [cab[0] + 6, cab[1] - 2]], 0.1), "#8a4b32", prog(t, 1.3, 0.3));
+    hand("cabin", cab[0] + 9, cab[1] + 3, 10, INK, "left", prog(t, 1.4, 0.3));
+    var pl = Mp(148, 108);
+    hand("walden pond", pl[0], pl[1], 15, INK, "center", prog(t, 1.2, 0.4));
+    var pin = Mp(150, 4);
+    fill(circlePts(pin[0], pin[1], 5, 0.1), "#c0392b", mpa);
+
+    // the screen: a day's page, turning one day at a time
+    monitorDesk(708, 430, 462, t, 60, 940);
+    var wa = prog(t, 0.1, 0.8);
+    fill(rectPts(480, 36, 456, 394, 0.6), "#171614", wa, { still: true });
+    fill(rectPts(484, 62, 448, 364, 0.3), "#f7f4ec", wa, { still: true });
+    brush(rectPts(480, 36, 456, 394, 0.8), 2, wa, { taper: 0.02 });
+    for (i = 0; i < 3; i++) fill(circlePts(496 + i * 13, 49, 3.6, 0.1), PAPER, wa * 0.7);
+    var dayLen = 2.6, start = 2.4, d = 0, ca = prog(t, 1.0, 0.5);
+    if (!reduceMotion && t > start) {
+      d = Math.min(2, Math.floor((t - start) / dayLen));
+      var dt = t - start - d * dayLen;
+      ca = d === 0 ? 1 : clamp01(dt / 0.4);
+      if (d < 2) ca *= clamp01((dayLen - dt) / 0.3);
+    }
+    var D = WALDEN_DAYS[d];
+    hand("← all days", 506, 86, 13, W_GREY, "left", wa);
+    hand(D[0], 910, 86, 13, W_GREY, "right", ca);
+    fill(rectPts(506, 100, 70, 20, 0.2), "#e4e8d6", wa);
+    hand("☀ summer", 514, 115, 12, W_OLIVE, "left", wa);
+    serif("Economy", 588, 115, 12, W_GREY, wa, true);
+    serif(D[1], 506, 152, 24, INK, ca);
+    if (d === 0) serif("clear, warm summer day", 506, 172, 12, W_GREY, ca, true);
+    D[2].forEach(function (line, k) { hand(line, 506, 200 + k * 20, 15, "#3b3934", "left", ca); });
+    brush(seg(506, 240, 910, 240, 0.2), 1, wa, { color: "#d8d3c6", taper: 0 });
+    var qa = prog(t, 1.4, 0.5);
+    brush(seg(507, 254, 507, 318, 0.1), 3, qa, { color: W_OLIVE, taper: 0 });       // the quote, with its olive rule
+    [[520, 266, 900], [520, 284, 880], [520, 302, 760]].forEach(function (q, k) {
+      brush(seg(q[0], q[1], q[2], q[1], 0.4), 3, prog(t, 1.5 + k * 0.1, 0.4), { color: "#5a564d", alpha: 0.45, taper: 0.05 });
+    });
+    [["activities", 506, 3], ["food & drink", 716, 2]].forEach(function (c, k) {   // the day's two cards
+      var aa = prog(t, 1.8 + k * 0.15, 0.4);
+      fill(rectPts(c[1], 334, 194, 82, 0.3), "#ffffff", aa);
+      brush(rectPts(c[1], 334, 194, 82, 0.3), 1, aa, { color: "#d8d3c6", taper: 0.02 });
+      hand(c[0], c[1] + 14, 354, 11, W_GREY, "left", aa);
+      for (var b = 0; b < c[2]; b++) {
+        fill(circlePts(c[1] + 18, 368 + b * 15, 1.5, 0.05), W_GREY, aa);
+        brush(seg(c[1] + 26, 368 + b * 15, c[1] + 26 + 60 + ((b * 37) % 50), 368 + b * 15, 0.2), 2.4, aa, { color: "#5a564d", alpha: 0.4, taper: 0.05 });
       }
     });
-    // a timeline of daily entries
-    brush(seg(60, 474, 470, 474, 0.4), 2, prog(t, 1.6, 0.8), {});
-    for (var d = 0; d < 50; d++) {
-      var dx = 64 + d * 8, tall = d % 10 === 0;
-      brush(seg(dx, 474, dx, tall ? 455 : 465, 0.1), tall ? 2 : 1.3, prog(t, 1.8 + d * 0.03, 0.15), {});
-    }
+  }
 
-    // the answer sheet, bubbles filling in
-    var sa = prog(t, 0.6, 0.5);
-    fill(rectPts(560, 104, 310, 350, 0.8), PAPER, sa);
-    for (var row = 0; row < 7; row++) {
-      var y = 156 + row * 42, pick = Math.floor(R() * 4);
-      brush(seg(584, y, 604, y, 0.1), 2.2, sa, { color: INK, taper: 0 });
+  // ---------------------------------------------------------------- SATitude, drawn after the site
+  // The mint landing page with its headline and the Danphe mascot in a dhaka topi; an answer sheet on a
+  // clipboard on the desk, its bubbles filling in.
+  var S_TEAL = "#16806f", S_DARK = "#0b2f2b", S_ORANGE = "#f08a1c";
+  function feather(cx, cy, len, w, ang, color, a) {
+    var pts = [], ca = Math.cos(ang), sa = Math.sin(ang);
+    for (var k = 0; k <= 16; k++) {
+      var q = (k / 16) * Math.PI * 2, x = Math.cos(q) * len / 2 + len / 2, y = Math.sin(q) * w / 2;
+      pts.push([cx + x * ca - y * sa, cy + x * sa + y * ca]);
+    }
+    fill(pts, color, a);
+  }
+
+  function sSatitude(t) {
+    var i;
+    // the clipboard, propped on the desk, its answer bubbles filling in
+    var cb = prog(t, 0.3, 0.6);
+    fill(rectPts(170, 290, 160, 172, 0.4), "#3a2e24", cb, { still: true });
+    brush(rectPts(170, 290, 160, 172, 0.4), 2, cb, { taper: 0.02 });
+    fill(rectPts(180, 304, 140, 150, 0.3), PAPER, cb);
+    fill(rectPts(226, 282, 48, 18, 0.2), "#9a968c", cb);
+    for (var row = 0; row < 6; row++) {
+      var y = 326 + row * 21, pick = Math.floor(R() * 4);
+      brush(seg(190, y, 200, y, 0.1), 2, cb, { color: INK, taper: 0 });
       for (var c = 0; c < 4; c++) {
-        var bx = 650 + c * 52, ring = circlePts(bx, y, 11, 0.2);
-        brush(ring, 1.6, prog(t, 0.9 + row * 0.08, 0.3), { color: INK, taper: 0.05 });
-        fill(circlePts(bx, y, 8, 0.2), INK, c === pick ? prog(t, 2.2 + row * 0.35, 0.2) : 0);
+        var bx = 222 + c * 24;
+        brush(circlePts(bx, y, 7, 0.2), 1.3, prog(t, 0.7 + row * 0.06, 0.3), { color: INK, taper: 0.05 });
+        fill(circlePts(bx, y, 5, 0.2), INK, c === pick ? prog(t, 2.2 + row * 0.35, 0.2) : 0);
       }
     }
+    brush(path([[344, 462], [372, 336]], 0.2), 6, prog(t, 0.9, 0.4), { taper: 0.1 });   // a pencil leaning on it
+    brush(seg(344, 462, 342, 470, 0.1), 2, prog(t, 1.1, 0.2), {});
 
-    // chimney smoke (last: it drifts)
-    var smoke = [];
-    for (var i = 0; i <= 6; i++) smoke.push([356 + Math.sin(i * 0.9 + t * 1.8) * 5 + i * 3, 228 - i * 12]);
-    brush(smoke, 2, prog(t, 1.6, 0.8), { alpha: 0.7, taper: 0.4, still: true });
+    // the screen: SATitude's landing page
+    monitorDesk(708, 430, 462, t, 60, 940);
+    var wa = prog(t, 0.1, 0.8);
+    fill(rectPts(480, 36, 456, 394, 0.6), "#171614", wa, { still: true });
+    fill(rectPts(484, 62, 448, 364, 0.3), "#dcf4ef", wa, { still: true });
+    ctx.save();
+    ctx.beginPath(); ctx.rect(484, 62, 448, 364); ctx.clip();          // the page's soft glows stay inside the screen
+    fill(circlePts(600, 210, 130, 0.5), "#f1fbf9", wa * 0.7, { still: true });
+    fill(circlePts(838, 262, 104, 0.5), "#bdeee5", wa * 0.6, { still: true });
+    ctx.restore();
+    brush(rectPts(480, 36, 456, 394, 0.8), 2, wa, { taper: 0.02 });
+    for (i = 0; i < 3; i++) fill(circlePts(496 + i * 13, 49, 3.6, 0.1), PAPER, wa * 0.7);
+    // the nav pill
+    var na = prog(t, 0.6, 0.4);
+    fill(rectPts(494, 70, 428, 24, 0.2), "#fbfefd", na);
+    fill(circlePts(510, 82, 6, 0.1), "#2f5fd0", na);
+    hand("practice tests   question bank   ai tutor   pricing", 704, 87, 11, "#0f5c55", "center", na);
+    fill(rectPts(856, 74, 60, 16, 0.2), S_ORANGE, na);
+    hand("start for free", 886, 86, 10, S_DARK, "center", na);
+    // the tag, the headline, the buttons
+    var ha = prog(t, 0.9, 0.5);
+    fill(rectPts(496, 112, 196, 16, 0.2), "#fbfefd", ha);
+    hand("digital sat · bluebook-style practice", 504, 124, 10, S_TEAL, "left", ha);
+    ctx.font = "800 25px 'Avenir Next', 'Helvetica Neue', Arial, sans-serif";
+    ctx.textAlign = "left";
+    ctx.globalAlpha = ha;
+    var x0 = 496, w1 = ctx.measureText("Make your ").width, w2 = ctx.measureText("SAT").width;
+    ctx.fillStyle = S_DARK; ctx.fillText("Make your ", x0, 162);
+    ctx.fillStyle = S_TEAL; ctx.fillText("Digital", x0 + w1, 162);
+    ctx.fillStyle = S_TEAL; ctx.fillText("SAT", x0, 192);
+    ctx.fillStyle = S_DARK; ctx.fillText(" prep feel", x0 + w2, 192);
+    ctx.fillText("brilliantly clear.", x0, 222);
+    ctx.globalAlpha = 1;
+    brush(seg(496, 246, 760, 246, 0.3), 2.4, prog(t, 1.2, 0.4), { color: "#4f7f78", alpha: 0.45, taper: 0.05 });
+    brush(seg(496, 262, 700, 262, 0.3), 2.4, prog(t, 1.3, 0.4), { color: "#4f7f78", alpha: 0.45, taper: 0.05 });
+    var ba = prog(t, 1.4, 0.4);
+    fill(rectPts(496, 280, 150, 26, 0.2), S_ORANGE, ba);
+    hand("start practicing free →", 571, 298, 13, S_DARK, "center", ba);
+    fill(rectPts(656, 280, 112, 26, 0.2), "#fbfefd", ba);
+    hand("see how it works", 712, 298, 13, S_DARK, "center", ba);
+
+    // the Danphe in its dhaka topi, facing the headline
+    var da = prog(t, 1.0, 0.6);
+    [[-0.95, 0], [-0.7, 1], [-0.45, 0], [-0.2, 1], [0.05, 0], [0.3, 1], [0.55, 0]].forEach(function (f) {   // the copper tail fan
+      feather(858, 262, 92, 20, f[0], f[1] ? "#e9a96b" : "#d9894f", da);
+    });
+    brush(seg(828, 290, 824, 316, 0.1), 2, da, { color: "#e8c9a8", taper: 0 });       // legs
+    brush(seg(842, 290, 846, 316, 0.1), 2, da, { color: "#e8c9a8", taper: 0 });
+    brush(seg(816, 316, 832, 316, 0.1), 1.6, da, { color: "#e8c9a8", taper: 0 });
+    brush(seg(838, 316, 854, 316, 0.1), 1.6, da, { color: "#e8c9a8", taper: 0 });
+    fill(blobPts(834, 254, 30, 40, 2, 3, 24), "#2f5fd0", da);                         // the body, in its blue jacket
+    fill(closed([[812, 226], [826, 230], [818, 268]], 0.2), "#f3f3f3", da);           // the white collar
+    fill(blobPts(848, 258, 18, 26, 2, 3, 20), "#5a6fe0", da);                         // the wing
+    for (i = 0; i < 4; i++) brush(arcPts(846, 248 + i * 9, 8, 4, 0.2, Math.PI - 0.2, 0.1), 1, da, { color: "#9fb4ff", alpha: 0.8, taper: 0.2 });
+    fill(circlePts(808, 198, 18, 0.2), "#45b7d9", da);                               // the head
+    fill(blobPts(812, 216, 10, 9, 2, 3, 16), "#e2603a", da);                         // its orange throat
+    fill(circlePts(802, 194, 6, 0.1), "#ffffff", da);
+    fill(circlePts(801, 194, 3, 0.05), INK, da);
+    fill(closed([[792, 199], [776, 205], [792, 208]], 0.1), "#e9b3a4", da);           // the beak
+    fill(closed([[795, 184], [822, 182], [824, 164], [797, 166]], 0.2), "#5b2a2f", da);   // the dhaka topi
+    [["#c94f3d", 801, 172], ["#2f8f8a", 809, 176], ["#e2b34a", 817, 171], ["#2f8f8a", 803, 179], ["#c94f3d", 815, 178]].forEach(function (dt) {
+      fill(circlePts(dt[1], dt[2], 1.8, 0.05), dt[0], da);
+    });
+    [[822, 168, 846, 150], [822, 170, 852, 160], [822, 172, 846, 172]].forEach(function (p) {   // the green plume
+      brush(path([[p[0], p[1]], [lerp(p[0], p[2], 0.5), p[1] - 8], [p[2], p[3]]], 0.2), 3, da, { color: "#2fa37a", taper: 0.3 });
+    });
   }
 
   // ---------------------------------------------------------------- scene: the résumé on a desk
   function sResume(t) {
     brush(seg(40, 476, 920, 476, 0.8), 3, prog(t, 0.2, 1), { taper: 0.05 });
     var ang = -0.05, ca = Math.cos(ang), sa = Math.sin(ang);
-    function S(x, y) { return [470 + x * ca - y * sa, 268 + x * sa + y * ca]; }
+    function S(x, y) { return [600 + x * ca - y * sa, 268 + x * sa + y * ca]; }
     function line(x1, y1, x2, y2, w, p, al) {
       var A = S(x1, y1), B = S(x2, y2);
       brush(seg(A[0], A[1], B[0], B[1], 0.3), w, p, { color: INK, taper: 0.1, alpha: al == null ? 1 : al });
@@ -1240,9 +1409,9 @@
       }
       y += 34 + n * 14;
     });
-    brush(path([[650, 440], [770, 336]], 0.3), 9, prog(t, 2.8, 0.5), { taper: 0.15 });   // a pen
-    brush(seg(650, 440, 638, 454, 0.2), 3, prog(t, 3.2, 0.2), {});
-    brush(seg(752, 352, 764, 364, 0.1), 1.6, prog(t, 3.2, 0.2), { color: INK, taper: 0 });
+    brush(path([[780, 440], [900, 336]], 0.3), 9, prog(t, 2.8, 0.5), { taper: 0.15 });   // a pen
+    brush(seg(780, 440, 768, 454, 0.2), 3, prog(t, 3.2, 0.2), {});
+    brush(seg(882, 352, 894, 364, 0.1), 1.6, prog(t, 3.2, 0.2), { color: INK, taper: 0 });
   }
 
   // ---------------------------------------------------------------- scene: the woods at Walden Pond
@@ -1373,7 +1542,7 @@
     pokhara: { draw: sPokhara, seed: 11, anchor: "tl", enter: "wipe",
       lines: ["i grew up in pokhara, nepal.", "under machhapuchhre, the “fish tail” mountain."] },
     school: { draw: sSchool, seed: 22, anchor: "tc", enter: "pan",
-      lines: ["budhanilkantha school, kathmandu.", "A Levels: Physics (A*) Chemistry (A*) Computer Science (A*) Mathematics (A*)", "valedictorian. 1600 on the sat."] },
+      lines: ["budhanilkantha school, kathmandu.", "A Levels: Physics (A*) Chemistry (A*) Computer Science (A*) Mathematics (A*)", "1600 SAT"] },
     lexington: { draw: sLexington, seed: 55, anchor: "tl", enter: "rise",
       lines: ["august 2026: about 12,000 km later.", "washington and lee university, lexington, virginia.", "a math + cs double major, on a full-ride scholarship."] },
     today: { draw: sEnd, seed: 77, anchor: "tl", enter: "wipe",
@@ -1397,7 +1566,8 @@
       lines: ["things i’ve built.", "pick one to know more."],
       items: [
         { id: "diatometer", label: "diatometer", aria: "Open DiatoMeter" },
-        { id: "summer-builds", label: "walden.life + satitude", aria: "Open walden.life and SATitude" }
+        { id: "walden-life", label: "walden.life", aria: "Open walden.life" },
+        { id: "satitude", label: "satitude", aria: "Open SATitude" }
       ] },
     experience: { draw: sGallery, seed: 151, anchor: "tc",
       lines: ["where i’ve learned and worked.", "pick one to know more."],
@@ -1419,12 +1589,12 @@
         { label: "visit ↗", href: "https://diamometer.us", aria: "Visit DiatoMeter", ext: true },
         { label: "source ↗", href: "https://github.com/sirElvinn/diatometer", aria: "DiatoMeter source code on GitHub", ext: true }
       ] },
-    "summer-builds": { draw: sSummer, seed: 99, anchor: "tl",
-      lines: ["summer 2026: two projects of my own.", "walden.life: thoreau’s walden, one day at a time.", "satitude: practice for the digital sat."],
-      links: [
-        { label: "walden.life ↗", href: "https://walden.life", aria: "Visit walden.life", ext: true },
-        { label: "satitude ↗", href: "https://satitude.xyz", aria: "Visit SATitude", ext: true }
-      ] },
+    "walden-life": { draw: sWaldenLife, seed: 99, anchor: "tl",
+      lines: ["summer 2026: walden.life.", "thoreau’s walden, one day at a time.", "100 entries drawn from 12 of walden’s 18 chapters."],
+      links: [{ label: "walden.life ↗", href: "https://walden.life", aria: "Visit walden.life", ext: true }] },
+    satitude: { draw: sSatitude, seed: 98, anchor: "tl",
+      lines: ["summer 2026: satitude.", "practice for the digital sat."],
+      links: [{ label: "satitude ↗", href: "https://satitude.xyz", aria: "Visit SATitude", ext: true }] },
 
     // experience
     courses: { draw: sNight, seed: 33, anchor: "tl",
@@ -1472,13 +1642,13 @@
 
   var TRACKS = {
     main: ["title", "pokhara", "school", "lexington", "today"],
-    projects: ["projects", "diatometer", "summer-builds"],
+    projects: ["projects", "diatometer", "walden-life", "satitude"],
     experience: ["experience", "courses", "nepalingo"],
     words: ["words", "walden", "penguins"],
     resume: ["resume"]
   };
   var MENU = "today";
-  var ALIASES = { contact: "today", menu: "today", quotes: "words" };
+  var ALIASES = { contact: "today", menu: "today", quotes: "words", "summer-builds": "walden-life" };
 
   function locate(id) {
     id = ALIASES[id] || id;
