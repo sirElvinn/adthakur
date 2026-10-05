@@ -1010,6 +1010,116 @@
     brush(seg(752, 352, 764, 364, 0.1), 1.6, prog(t, 3.2, 0.2), { color: INK, taper: 0 });
   }
 
+  // ---------------------------------------------------------------- scene: the woods at Walden Pond
+  // a fir: tiers of dark triangles with drooping edges, drawn bottom-up so each tier overlaps the one below
+  function pine(x, baseY, h, t, t0) {
+    brush(seg(x, baseY, x, baseY - h * 0.2, 0.3), 3, prog(t, t0, 0.4), { taper: 0.1 });
+    for (var b = 0; b < 5; b++) {
+      var u = b / 5, bot = baseY - h * (0.12 + u * 0.74), top = bot - h * 0.3, bw = h * (0.2 - u * 0.13);
+      var tier = closed([[x, top], [x + bw, bot], [x + bw * 0.5, bot - 5], [x, bot + 1], [x - bw * 0.5, bot - 5], [x - bw, bot]], 0.6);
+      var tp = prog(t, t0 + 0.15 + b * 0.08, 0.4);
+      fill(tier, INK, tp > 0 ? 1 : 0);
+      brush(tier, 1.8, tp, { taper: 0.03 });
+    }
+  }
+
+  function sWoods(t) {
+    stars(40, 0, 0, W, 220, t, 0);
+    fill(circlePts(600, 92, 22, 0.4), PAPER, prog(t, 0.4, 0.6));
+    fill(circlePts(610, 86, 20, 0.4), INK, prog(t, 0.4, 0.6));
+
+    // the far shore, then the pond
+    brush(path([[0, 352], [120, 344], [260, 350], [400, 340], [560, 348], [720, 338], [860, 346], [960, 340]], 0.8), 2, prog(t, 0.2, 1.2), { alpha: 0.85 });
+    var pond = arcPts(470, 420, 330, 54, 0, Math.PI * 2, 0.8);
+    fill(pond, PAPER, prog(t, 0.6, 0.6) * 0.1);
+    brush(pond, 2.2, prog(t, 0.6, 1.2), { taper: 0.03 });
+    for (var r = 0; r < 9; r++) {
+      var ry = 396 + r * 6, rx = 260 + R() * 360;
+      brush(seg(rx, ry, rx + 30 + R() * 50, ry, 0.3), 1.3, prog(t, 1.4 + r * 0.06, 0.3), { alpha: 0.6 });
+    }
+
+    // tall pines framing the pond
+    [[40, 352, 300], [96, 356, 250], [150, 350, 330], [210, 354, 220], [790, 348, 240], [846, 352, 310], [904, 350, 270], [948, 356, 330]].forEach(function (p, k) {
+      pine(p[0], p[1], p[2], t, 0.4 + k * 0.12);
+    });
+
+    // Thoreau's cabin on the far bank, and its reflection in the water
+    var ca = prog(t, 1.2, 0.8);
+    brush(rectPts(656, 304, 64, 46, 0.4), 2.2, ca, { taper: 0.03 });
+    brush(path([[648, 306], [688, 274], [728, 306]], 0.4), 2.4, ca, {});
+    brush(rectPts(680, 322, 14, 28, 0.2), 1.6, ca, { taper: 0.02 });
+    brush(rectPts(662, 314, 12, 11, 0.2), 1.3, ca, { taper: 0.02 });
+    brush(seg(712, 290, 712, 272, 0.2), 3, ca, {});
+    for (var rf = 0; rf < 5; rf++) {
+      brush(seg(658 + rf * 14, 372 + rf * 3, 668 + rf * 14, 372 + rf * 3, 0.2), 1.2, prog(t, 1.8 + rf * 0.05, 0.3), { alpha: 0.5 });
+    }
+
+    // someone sitting quietly on the near bank, looking out at the pond
+    brush(path([[280, 522], [400, 510], [560, 512], [700, 524]], 0.6), 1.8, prog(t, 1.2, 0.8), { alpha: 0.8 });
+    var sa = prog(t, 1.6, 0.6), sx = 470, sy = 512;
+    fill(circlePts(sx, sy - 40, 7, 0.2), PAPER, sa);
+    fill(closed([[sx - 9, sy - 31], [sx + 9, sy - 31], [sx + 14, sy - 18], [sx + 17, sy], [sx - 17, sy], [sx - 14, sy - 18]], 0.3), PAPER, sa);
+
+    // mist on the water (drifts)
+    var drift = reduceMotion ? 0 : Math.sin(t * 0.3) * 30;
+    [[200, 384, 520, 10], [420, 410, 760, 9]].forEach(function (m, k) {
+      var dd = drift * (k ? -1 : 1);
+      brush(path([[m[0] + dd, m[1]], [m[0] + 120 + dd, m[1] - 5], [m[2] - 100 + dd, m[1] + 4], [m[2] + dd, m[1] - 2]], 0.6), m[3], prog(t, 2 + k * 0.3, 1.2), { alpha: 0.1, dry: 1, still: true, taper: 0.5 });
+    });
+    // chimney smoke (last: it drifts)
+    var smoke = [];
+    for (var i = 0; i <= 6; i++) smoke.push([712 + Math.sin(i * 0.9 + t * 1.8) * 5 + i * 4, 268 - i * 12]);
+    brush(smoke, 2, prog(t, 1.8, 0.8), { alpha: 0.7, taper: 0.4, still: true });
+  }
+
+  // ---------------------------------------------------------------- scene: penguins on the ice, one of them trying to fly
+  function penguin(x, y, s, t, a, flap, hop) {
+    function P(px, py) { return [x + px * s, y - hop + py * s]; }
+    function Ps(list) { return list.map(function (p) { return P(p[0], p[1]); }); }
+    var body = Ps(blobPts(0, -34, 17, 34, 2, 3, 22));
+    fill(body, INK, a);
+    brush(body, 2.2 * s, a, { taper: 0.02 });
+    fill(Ps(blobPts(3, -28, 10, 25, 2, 3, 18)), PAPER, a);                       // white belly
+    fill(Ps(circlePts(0, -70, 12, 0.2)), INK, a);                                 // head
+    brush(Ps(arcPts(0, -70, 12, 12, Math.PI * 0.9, Math.PI * 2.1, 0.2)), 2 * s, a, {});
+    fill(Ps(circlePts(4, -73, 2.4, 0.05)), PAPER, a);                             // eye
+    fill(Ps(closed([[10, -71], [20, -67], [10, -64]], 0.05)), PAPER, a);           // beak
+    var up = flap ? -0.5 - 0.7 * flap : 0.45;                                    // flippers: down at rest, up when flapping
+    brush(Ps(path([[-14, -48], [-14 - 20 * Math.cos(up), -48 + 20 * Math.sin(up)]], 0.1)), 4.5 * s, a, { taper: 0.4 });
+    brush(Ps(path([[14, -48], [14 + 20 * Math.cos(up), -48 + 20 * Math.sin(up)]], 0.1)), 4.5 * s, a, { taper: 0.4 });
+    fill(Ps(arcPts(-6, 1, 7, 3, 0, Math.PI * 2, 0.05)), PAPER, a);                // feet
+    fill(Ps(arcPts(8, 1, 7, 3, 0, Math.PI * 2, 0.05)), PAPER, a);
+  }
+
+  function sPenguins(t) {
+    stars(70, 0, 0, W, 300, t, 0);
+    fill(circlePts(820, 96, 26, 0.4), PAPER, prog(t, 0.4, 0.6));
+    brush(seg(0, 330, W, 330, 0.6), 2, prog(t, 0.2, 1.2), {});
+    for (var w = 0; w < 26; w++) {
+      var wx = R() * W, wy = 344 + R() * 180;
+      brush(seg(wx, wy, wx + 20 + R() * 40, wy, 0.3), 1.2, prog(t, 0.8 + R() * 1.0, 0.3), { alpha: 0.5 });
+    }
+    // the ice floe: a bright top and a dark front edge
+    var top = closed([[170, 392], [300, 372], [520, 366], [720, 378], [800, 398], [640, 414], [380, 416], [220, 410]], 1);
+    fill(closed([[170, 392], [220, 410], [380, 416], [640, 414], [800, 398], [796, 432], [620, 450], [360, 452], [200, 440]], 1), INK, 1, { still: true });
+    brush(closed([[170, 392], [220, 410], [380, 416], [640, 414], [800, 398], [796, 432], [620, 450], [360, 452], [200, 440]], 1), 2, prog(t, 0.4, 1.0), { taper: 0.02 });
+    fill(top, PAPER, prog(t, 0.5, 0.5) * 0.92);
+    for (var c = 0; c < 6; c++) brush(seg(240 + c * 90, 420 + (c % 2) * 8, 252 + c * 90, 440 + (c % 2) * 4, 0.2), 1.2, prog(t, 1.0 + c * 0.05, 0.3), { alpha: 0.6 });
+
+    // three standing penguins, and one trying to fly (last: it flaps and hops)
+    var pa = prog(t, 1.0, 0.5);
+    penguin(330, 398, 1.15, t, pa, 0, 0);
+    penguin(400, 392, 0.95, t, pa, 0, 0);
+    penguin(660, 398, 1.05, t, pa, 0, 0);
+    var trying = prog(t, 2.0, 0.3);
+    var flap = reduceMotion ? 1 : 0.5 + 0.5 * Math.sin(t * 14);
+    var hop = reduceMotion ? 0 : Math.max(0, Math.sin(t * 3.5)) * 26 * trying;
+    for (var ml = 0; ml < 3; ml++) {                                               // little motion lines
+      brush(seg(520 - 34 + ml * 8, 330 - hop - 36 + ml * 10, 520 - 50 + ml * 8, 330 - hop - 36 + ml * 10, 0.1), 1.4, trying, { alpha: 0.6 * (hop > 4 ? 1 : 0), taper: 0.3, still: true });
+    }
+    penguin(530, 380, 1.1, t, pa, flap * trying, hop);
+  }
+
   // ---------------------------------------------------------------- the film: shots and their words
   // The main story is just my life. At the end, viewers choose what to see next: each choice is its own
   // short film ("track") that returns to the choices when it ends.
@@ -1028,6 +1138,7 @@
       choices: [
         { label: "projects →", track: "projects", aria: "Watch my projects" },
         { label: "experience →", track: "experience", aria: "Watch my experience" },
+        { label: "words i live by →", track: "words", aria: "Words that give meaning to my life" },
         { label: "résumé →", track: "resume", aria: "See my résumé" }
       ],
       links: [
@@ -1068,6 +1179,15 @@
     "lipi-ai": { draw: sStone, seed: 44, anchor: "bl",
       lines: ["summer 2023: student research council nepal.", "lipi ai: an app that reads tibetan inscriptions from a phone photo.", "i built the backend: splitting stacked letters so ocr can read them."] },
 
+    // words that give meaning to my life
+    walden: { draw: sWoods, seed: 130, anchor: "tc",
+      lines: ["words that give meaning to my life.",
+        "“i went to the woods because i wanted to live deliberately. i wanted to live deep and suck out all the marrow of life,",
+        "to put to rout all that was not life, and not, when i had come to die, discover that i had not lived.”",
+        "henry david thoreau, as read in dead poets society."] },
+    penguins: { draw: sPenguins, seed: 140, anchor: "tc",
+      lines: ["“she said we are penguins on the ice.", "we’re not meant to fly,", "but god knows we can try.”"] },
+
     // résumé
     resume: { draw: sResume, seed: 120, anchor: "tl",
       lines: ["the one-page version.", "education, projects, experience and skills."],
@@ -1079,10 +1199,11 @@
     main: ["title", "pokhara", "school", "lexington", "today"],
     projects: ["diatometer", "summer-builds"],
     experience: ["courses", "nepalingo", "lipi-ai"],
+    words: ["walden", "penguins"],
     resume: ["resume"]
   };
   var MENU = "today";
-  var ALIASES = { contact: "today", menu: "today", projects: "diatometer", experience: "courses" };
+  var ALIASES = { contact: "today", menu: "today", projects: "diatometer", experience: "courses", words: "walden", quotes: "walden" };
 
   function locate(id) {
     id = ALIASES[id] || id;
