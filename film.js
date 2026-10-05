@@ -292,50 +292,140 @@
   }
 
   // ---------------------------------------------------------------- scene 1: Pokhara
+  // Drawn from photos of Phewa Lake: the snowy Annapurna range behind forested, terraced foothills, with
+  // Machhapuchhre's sharp pyramid standing in front; Sarangkot's ridge and its paragliders on the left;
+  // the two-tiered Tal Barahi temple on its island; long wooden doongas moored and rowed on the water.
+  var ANNAPURNA = [[0, 284], [50, 252], [110, 234], [170, 216], [220, 200], [262, 176], [296, 190], [330, 170], [362, 152],
+    [402, 166], [446, 184], [490, 194], [540, 190], [600, 184], [660, 192], [720, 180], [770, 172], [800, 158], [826, 140],
+    [856, 152], [888, 168], [914, 158], [940, 172], [960, 178]];
+  var MACHHA = [[516, 266], [548, 226], [574, 192], [596, 152], [616, 114], [630, 86], [640, 66], [646, 60], [653, 72],
+    [665, 104], [681, 142], [699, 178], [719, 212], [745, 246], [772, 266]];
+  function treeTops(line, step, p, alpha) {
+    var L = 0, i;
+    for (i = 1; i < line.length; i++) L += Math.hypot(line[i][0] - line[i - 1][0], line[i][1] - line[i - 1][1]);
+    var n = Math.floor(L / step);
+    for (i = 0; i < n; i++) {
+      var q = pointAt(line, (i + 0.5) / n), r = step * 0.55;
+      brush(arcPts(q[0], q[1] + r * 0.5, r, r * 0.8, Math.PI, Math.PI * 2, 0.3), 1.2, p, { alpha: alpha, taper: 0.2 });
+    }
+  }
+  function doonga(x, y, s, a, rower, t) {
+    var hull = [[x - 44 * s, y - 9 * s], [x - 36 * s, y + 2 * s], [x + 36 * s, y + 2 * s], [x + 46 * s, y - 10 * s]];
+    fill(path(hull.concat([[x, y - 5 * s]]), 0.3), INK, a);
+    brush(path(hull, 0.3), 3 * s, a, { taper: 0.1 });
+    brush(seg(x - 42 * s, y - 7 * s, x + 44 * s, y - 8 * s, 0.2), 1.6 * s, a, { alpha: 0.8 });
+    brush(seg(x - 34 * s, y - 3 * s, x + 34 * s, y - 3 * s, 0.2), 1.2 * s, a, { alpha: 0.5 });   // its painted stripe
+    if (!rower) return;
+    var stroke = reduceMotion ? 0 : Math.sin(t * 1.6) * 4 * s;
+    fill(circlePts(x + 24 * s, y - 27 * s, 4.6 * s, 0.2), PAPER, a);
+    fill(closed([[x + 18 * s, y - 21 * s], [x + 30 * s, y - 21 * s], [x + 31 * s, y - 7 * s], [x + 17 * s, y - 7 * s]], 0.2), PAPER, a);
+    brush(seg(x + 10 * s + stroke, y - 32 * s, x - 6 * s - stroke, y + 14 * s, 0.2), 2 * s, a, {});   // the paddle
+  }
+  function paraglider(x, y, s, a) {
+    brush(arcPts(x, y + 8 * s, 18 * s, 9 * s, Math.PI * 1.08, Math.PI * 1.92, 0.2), 4.5 * s, a, { taper: 0.25 });
+    brush(seg(x - 15 * s, y + 4 * s, x, y + 20 * s, 0.05), 0.8, a, { alpha: 0.7, taper: 0 });
+    brush(seg(x + 15 * s, y + 4 * s, x, y + 20 * s, 0.05), 0.8, a, { alpha: 0.7, taper: 0 });
+    fill(circlePts(x, y + 22 * s, 2.4 * s, 0.05), PAPER, a);
+  }
+
   function sPokhara(t) {
-    stars(30, 0, 0, W, 150, t, 0);
-    var sunY = 262 - 82 * easeOut(prog(t, 0.3, 5.5));
-    fill(circlePts(790, sunY, 34, 0.5), PAPER, prog(t, 0.2, 0.8));
-    for (var r = 0; r < 8; r++) {
-      var a = -Math.PI + r * Math.PI / 7;
-      brush(seg(790 + Math.cos(a) * 46, sunY + Math.sin(a) * 46, 790 + Math.cos(a) * 70, sunY + Math.sin(a) * 70, 0.5),
-        2.4, prog(t, 1 + r * 0.08, 0.4), { dry: 0.6 });
+    var i;
+    stars(26, 0, 0, W, 110, t, 0);
+
+    // the Annapurna range: snow, with shadowed west faces and couloirs
+    var ra = prog(t, 0.2, 1.4);
+    fill(ANNAPURNA.concat([[960, 300], [0, 300]]), PAPER, ra * 0.8, { still: true });
+    brush(path(ANNAPURNA, 0.8), 2.2, ra, {});
+    [[[262, 176], [222, 214], [254, 230]], [[362, 152], [318, 196], [352, 214]], [[826, 140], [780, 184], [816, 204]], [[914, 158], [884, 186], [906, 200]]].forEach(function (f, k) {
+      fill(closed(f, 0.5), INK, prog(t, 0.8 + k * 0.1, 0.6) * 0.3);
+    });
+    [[262, 180, 250, 230], [366, 156, 380, 214], [358, 160, 334, 220], [828, 146, 846, 206], [822, 146, 800, 210], [700, 186, 690, 230], [470, 192, 456, 236]].forEach(function (c, k) {
+      brush(seg(c[0], c[1], c[2], c[3], 1), 1.4, prog(t, 1.0 + k * 0.06, 0.5), { color: INK, alpha: 0.5, taper: 0.3 });
+    });
+
+    // Machhapuchhre, nearer and taller: a sharp pyramid with its west face in shadow
+    var ma = prog(t, 0.5, 1.2);
+    fill(MACHHA, PAPER, ma * 0.96, { still: true });
+    fill(closed([[646, 60], [600, 150], [548, 226], [516, 266], [612, 266], [634, 150]], 0.5), INK, ma * 0.32);
+    brush(path(MACHHA, 0.6), 2.6, ma, {});
+    [[644, 72, 626, 150], [650, 84, 668, 168], [640, 96, 636, 200], [660, 120, 700, 214], [626, 128, 584, 222]].forEach(function (c, k) {
+      brush(seg(c[0], c[1], c[2], c[3], 1), 1.4, prog(t, 1.2 + k * 0.06, 0.5), { color: INK, alpha: 0.5, taper: 0.3 });
+    });
+
+    // forested foothills with terraced slopes
+    var HILLS = [[0, 262], [70, 248], [140, 256], [220, 238], [300, 252], [380, 242], [450, 258], [520, 262], [600, 250], [680, 266], [760, 252], [840, 262], [900, 248], [960, 256]];
+    var ha = prog(t, 0.9, 1.0);
+    fill(HILLS.concat([[960, 350], [0, 350]]), "#1b1a18", 1, { still: true });
+    brush(path(HILLS, 0.8), 2, ha, {});
+    treeTops(HILLS, 15, ha, 0.55);
+    for (i = 0; i < 7; i++) {   // terraced fields stepping down the slopes
+      var tx = i < 4 ? 600 + i * 22 : 420 + (i - 4) * 20, ty = (i < 4 ? 290 : 286) + (i % 4) * 12;
+      brush(path([[tx, ty], [tx + 18, ty - 3], [tx + 36, ty]], 0.3), 1.1, prog(t, 1.3 + i * 0.05, 0.4), { alpha: 0.35, taper: 0.3 });
     }
 
-    var ridge = [[0, 300]].concat(RIDGE.map(function (p) { return [40 + p[0] * 0.733, 172 + p[1] * 1.15]; })).concat([[W, 282]]);
-    fill(path(ridge, 1).concat([[W, 334], [0, 334]]), INK, 1, { still: true });
-    brush(path(ridge, 1), 3, prog(t, 0.1, 2.2), {});
-    snow(ridge, t, 1.4, 1, 286);
-    brush(seg(0, 334, W, 334, 0.6), 2, prog(t, 0.4, 1.2), {});
+    // Sarangkot's ridge on the left, with houses on its slope; the near shore on the right
+    var SARANGKOT = [[0, 214], [50, 204], [110, 210], [170, 226], [240, 256], [300, 290], [350, 322], [384, 350]];
+    var sa = prog(t, 1.1, 1.0);
+    fill(SARANGKOT.concat([[0, 350]]), INK, 1, { still: true });
+    brush(path(SARANGKOT, 0.8), 2.4, sa, {});
+    treeTops(SARANGKOT.slice(2), 14, sa, 0.6);
+    [[70, 252], [120, 270], [176, 288], [96, 300], [210, 312]].forEach(function (h, k) {
+      var hp = prog(t, 1.5 + k * 0.08, 0.3);
+      fill(rectPts(h[0], h[1], 14, 9, 0.2), PAPER, hp * 0.75);
+      brush(path([[h[0] - 3, h[1] + 1], [h[0] + 7, h[1] - 6], [h[0] + 17, h[1] + 1]], 0.2), 1.6, hp, {});
+    });
+    var SHORE = [[700, 350], [760, 326], [840, 310], [900, 304], [960, 300]];
+    fill(SHORE.concat([[960, 350]]), INK, 1, { still: true });
+    brush(path(SHORE, 0.6), 2, prog(t, 1.2, 0.8), {});
+    treeTops(SHORE, 13, prog(t, 1.3, 0.8), 0.6);
 
-    for (var row = 0; row < 11; row++) {
-      var y = 348 + row * 17 + row * row * 0.55, nd = 3 + row;
+    // Phewa Lake: Machhapuchhre's reflection, broken by ripples
+    brush(seg(0, 350, W, 350, 0.6), 2, prog(t, 0.6, 1.2), {});
+    var refl = MACHHA.map(function (p) { return [p[0], 350 + (350 - p[1]) * 0.42]; });
+    fill(refl, PAPER, prog(t, 1.6, 0.8) * 0.2, { still: true });
+    for (i = 0; i < 7; i++) {
+      var ry = 366 + i * 12;
+      brush(seg(560 + (i % 3) * 14, ry, 720 - (i % 2) * 20, ry, 0.4), 1.6, prog(t, 1.8 + i * 0.05, 0.4), { color: INK, alpha: 0.55 });
+    }
+    for (var row = 0; row < 9; row++) {
+      var y = 372 + row * 18 + row * row * 0.5, nd = 3 + row;
       for (var d = 0; d < nd; d++) {
-        var x0 = R() * W, len = 18 + R() * 50 + row * 5;
-        brush(seg(x0, y, x0 + len, y + (R() - 0.5) * 2, 0.4), 1.2 + row * 0.25, prog(t, 0.9 + row * 0.1 + d * 0.02, 0.35), {});
+        var x0 = R() * W, len = 16 + R() * 44 + row * 5;
+        brush(seg(x0, y, x0 + len, y + (R() - 0.5) * 2, 0.4), 1 + row * 0.2, prog(t, 1.0 + row * 0.1 + d * 0.02, 0.35), { alpha: 0.75 });
       }
     }
-    for (var k = 0; k < 9; k++) {
-      var yy = 342 + k * 14, ww = 60 - k * 5;
-      brush(seg(790 - ww / 2 + (R() - 0.5) * 8, yy, 790 + ww / 2 + (R() - 0.5) * 8, yy, 0.4), 2.2, prog(t, 2 + k * 0.08, 0.3), {});
-    }
 
-    var bx = 150 + Math.min(t, 14) * 26, by = 452 + Math.sin(t * 1.6) * 2.5;
-    brush(path([[bx - 50, by - 8], [bx - 30, by + 9], [bx + 30, by + 9], [bx + 52, by - 10]], 0.6), 4, prog(t, 1.6, 0.6), {});
-    brush(seg(bx - 50, by - 8, bx + 52, by - 10, 0.5), 2, prog(t, 1.8, 0.5), {});
-    brush(seg(bx + 4, by - 9, bx + 4, by - 78, 0.4), 2.4, prog(t, 2.0, 0.5), {});
-    fill(closed([[bx + 8, by - 74], [bx + 8, by - 16], [bx + 46, by - 18]], 0.6), PAPER, prog(t, 2.3, 0.5));
-    fill(circlePts(bx - 22, by - 24, 5, 0.3), PAPER, prog(t, 2.4, 0.4));
-    brush(seg(bx - 22, by - 19, bx - 24, by - 8, 0.3), 3, prog(t, 2.4, 0.4), {});
-    brush(seg(bx - 34, by - 18, bx - 64, by + 16, 0.4), 1.8, prog(t, 2.6, 0.4), {});
-    for (var q = 0; q < 3; q++) {
-      brush(seg(bx - 40 + q * 30, by + 18 + q * 3, bx - 10 + q * 30, by + 18 + q * 3, 0.4), 1.4, prog(t, 2.8, 0.4), { alpha: 0.7 });
-    }
+    // Tal Barahi: the two-tiered temple on its little island
+    var ta = prog(t, 1.9, 0.6), cx = 430, cy = 392;
+    function T(px, py) { return [cx + px * 1.5, cy + py * 1.5]; }
+    fill(arcPts(cx, cy + 3, 52, 10, 0, Math.PI * 2, 0.6), INK, 1, { still: true });
+    brush(arcPts(cx, cy + 3, 52, 10, Math.PI, Math.PI * 2, 0.6), 1.8, ta, {});
+    treeTops([[cx - 46, cy], [cx - 22, cy - 8]], 9, ta, 0.7);
+    treeTops([[cx + 20, cy - 8], [cx + 46, cy]], 9, ta, 0.7);
+    fill(closed([T(-8, -2), T(8, -2), T(8, -14), T(-8, -14)], 0.2), PAPER, ta);
+    fill(closed([T(-15, -13), T(15, -13), T(8, -22), T(-8, -22)], 0.2), INK, ta);
+    brush(closed([T(-15, -13), T(15, -13), T(8, -22), T(-8, -22)], 0.2), 1.6, ta, { taper: 0.05 });
+    fill(closed([T(-5, -22), T(5, -22), T(5, -28), T(-5, -28)], 0.2), PAPER, ta);
+    fill(closed([T(-10, -27), T(10, -27), T(5, -34), T(-5, -34)], 0.2), INK, ta);
+    brush(closed([T(-10, -27), T(10, -27), T(5, -34), T(-5, -34)], 0.2), 1.6, ta, { taper: 0.05 });
+    brush(seg(cx, cy - 51, cx, cy - 63, 0.1), 1.8, ta, {});
+    fill(closed([T(-6, 4), T(6, 4), T(6, 12), T(-6, 12)], 0.2), PAPER, ta * 0.12);
 
-    for (var b = 0; b < 3; b++) {   // birds last: their wings change length as they flap
-      var cx = 300 + Math.min(t, 10) * 30 + b * 34, cy = 120 + b * 12 + Math.sin(t * 3 + b) * 3, f = Math.sin(t * 8 + b * 2) * 3;
-      brush(path([[cx - 9, cy - 2 - f], [cx, cy + 3], [cx + 9, cy - 2 - f]], 0.2), 1.8, prog(t, 2.2 + b * 0.2, 0.3), { taper: 0.3 });
-    }
+    // doongas moored by the shore, one far out, and one being rowed across (it drifts)
+    doonga(70, 372, 0.55, prog(t, 2.0, 0.4), false, t);
+    doonga(126, 380, 0.6, prog(t, 2.1, 0.4), false, t);
+    doonga(188, 388, 0.62, prog(t, 2.2, 0.4), false, t);
+    doonga(820, 398, 0.5, prog(t, 2.2, 0.4), true, t);
+    var bx = 560 + Math.min(t, 16) * 7, by = 462 + Math.sin(t * 1.4) * 2;
+    brush(seg(bx - 110, by + 6, bx - 60, by + 6, 0.3), 1.4, prog(t, 2.4, 0.4), { alpha: 0.6 });
+    brush(seg(bx - 90, by + 13, bx - 54, by + 13, 0.3), 1.2, prog(t, 2.4, 0.4), { alpha: 0.5 });
+    doonga(bx, by, 1.1, prog(t, 1.8, 0.6), true, t);
+
+    // paragliders off Sarangkot (last: they drift)
+    [[96, 150, 0.9], [210, 132, 1], [300, 176, 0.75]].forEach(function (g, k) {
+      var dx = reduceMotion ? 0 : Math.sin(t * 0.35 + k * 2) * 10, dy = reduceMotion ? 0 : Math.cos(t * 0.5 + k) * 4;
+      paraglider(g[0] + dx, g[1] + dy, g[2], prog(t, 2.4 + k * 0.2, 0.5));
+    });
   }
 
   // ---------------------------------------------------------------- scene: the road into Budhanilkantha School
@@ -352,37 +442,28 @@
     return pts;
   }
 
-  function cloud(cx, cy, s, t, t0) {
-    var bumps = [[-62, 4, 24], [-30, -14, 32], [10, -24, 38], [50, -10, 30], [80, 4, 22]], outline = [];
-    bumps.forEach(function (bp, i) {
-      var arc = arcPts(cx + bp[0] * s, cy + bp[1] * s, bp[2] * s, bp[2] * s, i === 0 ? Math.PI * 0.85 : Math.PI * 1.1, i === bumps.length - 1 ? Math.PI * 2.15 : Math.PI * 1.9, 0.5);
-      outline = outline.concat(arc);
-    });
-    outline.push([cx + 98 * s, cy + 20 * s]);
-    outline.push([cx - 82 * s, cy + 20 * s]);
-    outline.push(outline[0]);
-    fill(outline, INK, 1, { still: true });
-    brush(outline, 2.2, prog(t, t0, 1.2), { dry: 0.35, taper: 0.03 });
-    brush(arcPts(cx + 4 * s, cy - 2 * s, 20 * s, 10 * s, 3.5, 5.5, 0.4), 1.4, prog(t, t0 + 0.8, 0.4), { alpha: 0.55 });
-    brush(arcPts(cx - 34 * s, cy + 6 * s, 14 * s, 7 * s, 3.6, 5.4, 0.4), 1.2, prog(t, t0 + 0.9, 0.4), { alpha: 0.45 });
-  }
-
-  function treeBlob(cx, cy, rx, ry, t, t0, leaves) {
-    var outline = blobPts(cx, cy, rx, ry, 7, 13, 40);
-    fill(outline, INK, 1, { still: true });
-    brush(outline, 2.2, prog(t, t0, 1.2), { taper: 0.02 });
-    for (var i = 0; i < leaves; i++) {
-      var a = R() * Math.PI * 2, d = Math.sqrt(R()) * 0.82, x = cx + Math.cos(a) * rx * d, y = cy + Math.sin(a) * ry * d, s = 3 + R() * 4, a0 = R() * 6.3;
-      brush(arcPts(x, y, s, s * 0.8, a0, a0 + 3.8, 0.2), 1.2, prog(t, t0 + 0.6 + R() * 0.8, 0.2), { alpha: 0.6, taper: 0.3 });
+  // a tree's canopy in ink: a scalloped outline, filled dark, with a few leaf clusters inside
+  function canopy(cx, cy, rx, ry, t, t0, clusters) {
+    var pts = [], n = Math.max(12, Math.round((rx + ry) / 6));
+    for (var i = 0; i < n; i++) {
+      var th = ((i + 0.5) / n) * Math.PI * 2, step = (Math.PI * 2) / n;
+      var bx = cx + Math.cos(th) * rx, by = cy + Math.sin(th) * ry;
+      var br = Math.hypot(Math.cos(th + step / 2) * rx - Math.cos(th - step / 2) * rx, Math.sin(th + step / 2) * ry - Math.sin(th - step / 2) * ry) * (0.5 + R() * 0.35);
+      var jr = 1 + (R() - 0.5) * 0.12;
+      pts = pts.concat(arcPts(cx + (bx - cx) * jr, cy + (by - cy) * jr, br, br, th - Math.PI / 2 - 0.25, th + Math.PI / 2 + 0.25, 0.3));
+    }
+    pts.push(pts[0]);
+    fill(pts, INK, 1, { still: true });
+    brush(pts, 2, prog(t, t0, 1.2), { taper: 0.02 });
+    for (var k = 0; k < clusters; k++) {
+      var a = R() * Math.PI * 2, d = Math.sqrt(R()) * 0.7, x = cx + Math.cos(a) * rx * d, y = cy + Math.sin(a) * ry * d, r = 5 + R() * 6;
+      brush(arcPts(x, y, r, r * 0.75, Math.PI * 1.1, Math.PI * 1.9, 0.2), 1.2, prog(t, t0 + 0.6 + R() * 0.6, 0.3), { alpha: 0.45, taper: 0.3 });
     }
   }
 
   function sSchool(t) {
-    cloud(330, 64, 1.1, t, 0.2);
-    cloud(110, 96, 0.7, t, 0.6);
-
-    // Shivapuri: the forested mountain right behind the campus
-    var ridgeKnots = [[0, 196], [70, 170], [150, 150], [230, 138], [300, 144], [370, 158], [440, 168], [520, 186], [600, 198], [700, 214], [760, 224]];
+    // Shivapuri: the forested mountain right behind the campus, with low cloud on its shoulder
+    var ridgeKnots = [[0, 196], [70, 170], [150, 150], [230, 138], [300, 144], [370, 158], [440, 168], [520, 186], [600, 196], [700, 200], [780, 186], [860, 170], [960, 160]];
     function ridgeAt(x) {
       for (var i = 1; i < ridgeKnots.length; i++) {
         if (x <= ridgeKnots[i][0]) {
@@ -393,26 +474,55 @@
       return ridgeKnots[ridgeKnots.length - 1][1];
     }
     var hills = path(ridgeKnots, 0.8);
-    fill(hills.concat([[760, 420], [0, 420]]), INK, 1, { still: true });
+    fill(hills.concat([[960, 420], [0, 420]]), INK, 1, { still: true });
     brush(hills, 2.4, prog(t, 0.3, 1.4), {});
+    treeTops(ridgeKnots, 13, prog(t, 0.5, 1.2), 0.55);
     for (var row = 0; row < 7; row++) {                     // rows of treetops following the slope
-      for (var col = 0; col < 22; col++) {
-        var fx = col * 34 + (row % 2) * 17 + (R() - 0.5) * 14, fy = ridgeAt(fx) + 14 + row * 26 + (R() - 0.5) * 10, fr = 4 + R() * 3;
+      for (var col = 0; col < 29; col++) {
+        var fx = col * 34 + (row % 2) * 17 + (R() - 0.5) * 14, fy = ridgeAt(fx) + 18 + row * 26 + (R() - 0.5) * 10, fr = 4 + R() * 3;
         brush(arcPts(fx, fy, fr, fr * 0.85, Math.PI * 1.05, Math.PI * 1.95, 0.2), 1.1,
-          fy < 380 ? prog(t, 0.7 + row * 0.12 + R() * 0.4, 0.3) : 0, { alpha: 0.5 - row * 0.03, taper: 0.3 });
+          fy < 380 ? prog(t, 0.7 + row * 0.12 + R() * 0.4, 0.3) : 0, { alpha: 0.45 - row * 0.03, taper: 0.3 });
       }
     }
-    [[120, 160, 70, 300], [260, 146, 230, 290], [420, 166, 450, 300], [560, 192, 600, 300]].forEach(function (rv, k) {   // ravines
-      brush(path([[rv[0], rv[1] + 6], [lerp(rv[0], rv[2], 0.5) + 8, lerp(rv[1], rv[3], 0.5)], [rv[2], rv[3]]], 0.6), 1.6, prog(t, 1.0 + k * 0.1, 0.6), { alpha: 0.45, dry: 0.6 });
+    [[120, 160, 70, 300], [260, 146, 230, 290], [420, 166, 450, 300], [760, 190, 730, 300], [880, 172, 900, 300]].forEach(function (rv, k) {   // ravines
+      brush(path([[rv[0], rv[1] + 6], [lerp(rv[0], rv[2], 0.5) + 8, lerp(rv[1], rv[3], 0.5)], [rv[2], rv[3]]], 0.6), 1.6, prog(t, 1.0 + k * 0.1, 0.6), { alpha: 0.4, dry: 0.6 });
     });
-    var drift = reduceMotion ? 0 : Math.sin(t * 0.25) * 24;    // mist drifting across the slopes
-    [[40, 232, 380, 11], [300, 258, 700, 10], [-20, 288, 300, 9]].forEach(function (m, k) {
+    var drift = reduceMotion ? 0 : Math.sin(t * 0.25) * 24;    // mist and low cloud drifting across the slopes
+    [[560, 176, 960, 16], [-20, 150, 300, 14], [40, 232, 380, 11], [300, 258, 700, 10], [600, 236, 960, 11], [-20, 288, 300, 9]].forEach(function (m, k) {
       var dd = drift * (k % 2 ? -1 : 1), mid = (m[0] + m[2]) / 2;
-      brush(path([[m[0] + dd, m[1] + 3], [mid - 60 + dd, m[1] - 4], [mid + 50 + dd, m[1] + 5], [m[2] + dd, m[1] - 2]], 0.8), m[3], prog(t, 1.6 + k * 0.2, 1.2), { alpha: 0.09, dry: 1, still: true, taper: 0.5 });
+      brush(path([[m[0] + dd, m[1] + 3], [mid - 60 + dd, m[1] - 4], [mid + 50 + dd, m[1] + 5], [m[2] + dd, m[1] - 2]], 0.8), m[3], prog(t, 1.6 + k * 0.2, 1.2), { alpha: k < 2 ? 0.14 : 0.09, dry: 1, still: true, taper: 0.5 });
     });
 
     // a big shade tree behind the left building
-    treeBlob(150, 286, 90, 50, t, 0.7, 20);
+    brush(path([[150, 360], [146, 320], [150, 300]], 0.4), 7, prog(t, 0.6, 0.5), { taper: 0.2 });
+    canopy(150, 272, 104, 52, t, 0.7, 8);
+
+    // the Saraswati temple among tall pines: a stepped brick plinth, then a two-tiered roof with a fringe
+    pine(392, 352, 170, t, 0.6);
+    pine(420, 354, 128, t, 0.7);
+    pine(560, 352, 150, t, 0.8);
+    var pg = prog(t, 1.2, 0.7), gx = 486, gy = 352, gs = 1.15;
+    function G(x, y) { return [gx + x * gs, gy + y * gs]; }
+    function Gl(list) { return list.map(function (p) { return G(p[0], p[1]); }); }
+    [[-44, -8, 88, 8], [-36, -16, 72, 8], [-28, -22, 56, 6]].forEach(function (pl) {
+      var r = Gl([[pl[0], pl[1]], [pl[0] + pl[2], pl[1]], [pl[0] + pl[2], pl[1] + pl[3]], [pl[0], pl[1] + pl[3]], [pl[0], pl[1]]]);
+      fill(r, INK, 1, { still: true });
+      brush(r, 1.6, pg, { taper: 0.02 });
+    });
+    for (var st = 0; st < 4; st++) brush(Gl([[-7, -20 + st * 5.5], [7, -20 + st * 5.5]]), 1.2, pg, { alpha: 0.8, taper: 0 });
+    fill(Gl([[-16, -50], [16, -50], [16, -22], [-16, -22]]), PAPER, pg * 0.22);
+    brush(Gl([[-16, -22], [-16, -50], [16, -50], [16, -22]]), 1.6, pg, { taper: 0.02 });
+    brush(Gl([[-6, -22], [-6, -42], [6, -42], [6, -22]]), 1.3, pg, { taper: 0.02 });
+    [[-36, -50, 36, -50, 20, -62], [-24, -72, 24, -72, 11, -83]].forEach(function (rf) {
+      var poly = Gl([[rf[0], rf[1]], [rf[2], rf[3]], [rf[4], rf[5]], [-rf[4], rf[5]], [rf[0], rf[1]]]);
+      fill(poly, PAPER, pg * 0.85);
+      brush(poly, 1.6, pg, { taper: 0.02 });
+      for (var fr = rf[0] + 3; fr < rf[2] - 1; fr += 4) brush(Gl([[fr, rf[1] + 0.5], [fr, rf[1] + 5]]), 1.1, pg, { alpha: 0.8, taper: 0.1 });   // the fringe
+    });
+    fill(Gl([[-11, -72], [11, -72], [11, -62], [-11, -62]]), INK, pg);
+    brush(Gl([[-11, -62], [-11, -72], [11, -72], [11, -62]]), 1.4, pg, { taper: 0.02 });
+    brush(Gl([[0, -83], [0, -96]]), 2.2, pg, { taper: 0.2 });
+    fill(circlePts(G(0, -97)[0], G(0, -97)[1], 2.6, 0.1), PAPER, pg);
 
     // another long red-roofed block at the end of the road (partly behind the trees)
     var b2 = prog(t, 1.0, 0.8);
@@ -420,28 +530,10 @@
     fill(roof2, INK, 1, { still: true });
     brush(roof2, 2.2, b2, { taper: 0.02 });
     for (var h2 = 0; h2 < 8; h2++) brush(seg(584 + h2 * 14, 329, 576 + h2 * 15, 342, 0.2), 1.2, prog(t, 1.3 + h2 * 0.04, 0.2), { alpha: 0.7 });
+    fill(rectPts(560, 344, 144, 38, 0.4), INK, 1, { still: true });
     brush(rectPts(560, 344, 144, 38, 0.4), 1.8, b2, { taper: 0.02 });
+    brush(seg(560, 347, 704, 347, 0.2), 1.8, prog(t, 1.3, 0.5), { alpha: 0.9 });
     for (var w2 = 0; w2 < 5; w2++) brush(rectPts(570 + w2 * 26, 354, 14, 16, 0.2), 1.2, prog(t, 1.5 + w2 * 0.05, 0.3), { taper: 0.02 });
-
-    // the Saraswati temple's two-tiered pagoda roof, peeking over the trees
-    var pg = prog(t, 1.4, 0.6), px = 462;
-    function G(x, y) { return [px + x * 1.3, 252 + y * 1.3]; }
-    function Gs(list) { return list.map(function (p) { return G(p[0], p[1]); }); }
-    brush(Gs(seg(0, -40, 0, -26, 0.1)), 3, pg, { taper: 0.2 });
-    fill(Gs(circlePts(0, -41, 2.6, 0.1)), PAPER, pg);
-    fill(Gs(closed([[-16, -22], [16, -22], [27, -13], [-27, -13]], 0.2)), PAPER, pg * 0.85);
-    brush(Gs(arcPts(-30, -17, 4, 4, -0.2, 1.8, 0.1)), 2, pg, {});
-    brush(Gs(arcPts(30, -17, 4, 4, 1.3, 3.3, 0.1)), 2, pg, {});
-    fill(Gs(rectPts(-11, -13, 22, 9, 0.1)), INK, pg);
-    brush(Gs(rectPts(-11, -13, 22, 9, 0.1)), 1.6, pg, { taper: 0 });
-    fill(Gs(closed([[-28, -4], [28, -4], [42, 7], [-42, 7]], 0.3)), PAPER, pg * 0.85);
-    brush(Gs(arcPts(-45, 2, 5, 5, -0.2, 1.8, 0.1)), 2, pg, {});
-    brush(Gs(arcPts(45, 2, 5, 5, 1.3, 3.3, 0.1)), 2, pg, {});
-    brush(Gs(seg(-30, 9, 30, 9, 0.1)), 2.4, pg, { alpha: 0.8 });
-
-    // trees in the middle distance (they hide the temple's base)
-    treeBlob(400, 304, 78, 60, t, 0.6, 24);
-    treeBlob(522, 302, 60, 54, t, 0.7, 20);
 
     // the long red-roofed brick block on the left, with a trimmed hedge in front
     var rb = prog(t, 0.9, 0.8);
@@ -451,6 +543,11 @@
     for (var hr = 0; hr < 16; hr++) brush(seg(72 + hr * 15, 330, 62 + hr * 16, 349, 0.2), 1.3, prog(t, 1.2 + hr * 0.03, 0.2), { alpha: 0.75 });
     fill(rectPts(38, 352, 282, 44, 0.4), INK, 1, { still: true });
     brush(rectPts(38, 352, 282, 44, 0.4), 2, rb, { taper: 0.02 });
+    brush(seg(38, 355, 320, 355, 0.3), 2.2, prog(t, 1.2, 0.6), { alpha: 0.9 });             // white trim under the eaves
+    for (var bc = 0; bc < 12; bc++) {                                                         // brick coursing
+      var bcx = 44 + R() * 260, bcy = 364 + R() * 26;
+      brush(seg(bcx, bcy, bcx + 10 + R() * 12, bcy, 0.1), 1, prog(t, 1.5 + R() * 0.5, 0.3), { alpha: 0.3, taper: 0.2 });
+    }
     for (var wi = 0; wi < 7; wi++) {
       var wx = 52 + wi * 38;
       brush(rectPts(wx, 362, 20, 22, 0.2), 1.4, prog(t, 1.4 + wi * 0.05, 0.3), { taper: 0.02 });
@@ -462,18 +559,13 @@
     fill(hedge, INK, 1, { still: true });
     brush(hedge, 1.8, prog(t, 1.5, 1.0), { taper: 0.03 });
 
-    // the big trees on the right: trunks, then a full, lumpy canopy
-    brush(path([[936, 480], [910, 400], [880, 330], [846, 280]], 0.8), 9, prog(t, 1.0, 0.8), { taper: 0.25 });
-    brush(path([[960, 420], [946, 340], [930, 300]], 0.6), 6, prog(t, 1.1, 0.6), { taper: 0.3 });
-    brush(path([[880, 330], [830, 300], [790, 290]], 0.6), 3.6, prog(t, 1.3, 0.6), { taper: 0.3 });
-    treeBlob(940, 70, 300, 210, t, 0.4, 0);
-    treeBlob(700, 180, 120, 96, t, 0.6, 0);
-    treeBlob(830, 250, 110, 70, t, 0.7, 0);
-    for (var lf = 0; lf < 140; lf++) {
-      var lx = 600 + R() * 360, ly = R() * 320, ls = 3 + R() * 5, a0 = R() * 6.3;
-      var inside = (Math.pow((lx - 940) / 300, 2) + Math.pow((ly - 70) / 210, 2) < 0.8) || (Math.pow((lx - 700) / 120, 2) + Math.pow((ly - 180) / 96, 2) < 0.75) || (Math.pow((lx - 830) / 110, 2) + Math.pow((ly - 250) / 70, 2) < 0.7);
-      brush(arcPts(lx, ly, ls, ls * 0.8, a0, a0 + 3.8, 0.2), 1.2, inside ? prog(t, 1.0 + R() * 1.2, 0.2) : 0, { alpha: 0.55, taper: 0.3 });
-    }
+    // a big shade tree on the right of the road
+    brush(path([[930, 490], [918, 420], [904, 350], [890, 290]], 0.8), 11, prog(t, 1.0, 0.8), { taper: 0.25 });
+    brush(path([[906, 340], [860, 300], [830, 286]], 0.6), 4, prog(t, 1.2, 0.6), { taper: 0.3 });
+    brush(path([[912, 380], [950, 330], [960, 318]], 0.6), 4, prog(t, 1.2, 0.6), { taper: 0.3 });
+    canopy(812, 270, 74, 48, t, 0.8, 6);
+    canopy(946, 300, 60, 52, t, 0.85, 5);
+    canopy(880, 226, 108, 72, t, 0.7, 10);
 
     // the road, with its painted edge lines
     var road = closed([[110, 540], [840, 540], [622, 384], [466, 384]], 0.8);
