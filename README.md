@@ -10,7 +10,7 @@ background written from scratch.
 
 | File | What it does |
 | --- | --- |
-| `index.html` | About page: name, photo (Fig. 1.1) and short bio. |
+| `index.html` | About page: name, photo and short bio. |
 | `projects.html` | DiatoMeter, Nepalingo, SATitude, walden.life, each with a figure. |
 | `experience.html` | Incubate Nepal (links to the Nepalingo project), Lipi AI, education and certificates. |
 | `contact.html` | Email, LinkedIn, GitHub, résumé. Has the pixel mountains at the bottom. |
@@ -28,7 +28,7 @@ change the menu in each file.
 
 - **Your photo:** replace `assets/photo.jpg` (currently a 1200 x 1200 square, shown up to 520px wide). Frame it
   so there's room below your chin; a crop that ends at the chin looks like the head was cut off. If the new photo
-  has a different shape, update the `width` and `height` on its `<img>` in `index.html`, and edit the `Fig. 1.1` caption.
+  has a different shape, update the `width` and `height` on its `<img>` in `index.html`.
 - **A project image:** copy the `<figure class="figure">` block from the DiatoMeter entry in `projects.html`,
   point it at your new file in `assets/`, and number the caption Fig. 2.2, 2.3, and so on.
 - Keep images under about 500 KB so the pages load fast. On a Mac you can shrink one with
