@@ -1,34 +1,38 @@
-# adthakur: the story so far
+# adthakur: the story so far, as a film
 
-A one-page site for Aditya Bikram Thakur, live at https://adthakur.com. It tells the story so far in chapters,
-from Pokhara to DiatoMeter, each with an ink drawing or a real screenshot. It is plain HTML, CSS, and a little
-JavaScript. There is no framework and no build step, so what you see in these files is exactly what the browser gets.
+adthakur.com is one full screen: a short film, drawn live in the browser with JavaScript "brush strokes"
+(no images, no video). The viewer drives it. A click, tap, swipe or the arrow keys reveal the next caption,
+and after a shot's last caption the camera moves to the next shot. All words appear only in the
+handwritten caption boxes. The last shot has clickable boxes for email, GitHub, LinkedIn and the résumé.
+
+There is no framework and no build step, so what you see in these files is exactly what the browser gets.
 
 ## What's in the folder
 
 | File | What it does |
 | --- | --- |
-| `index.html` | The whole site: your name and photo, then nine chapters, ending with how to reach you. Each chapter is a `<section class="chapter">`; the words are plain paragraphs you can edit directly. |
-| `ink.js` | The ink drawings. Any `<canvas class="ink" data-scene="...">` gets that scene, which draws itself with brush strokes the first time you scroll to it. The handwritten label on each drawing is in `SCENES` near the bottom. |
-| `styles.css` | How everything looks. Colors are "tokens" at the very top (like `--background`), in light and dark mode. |
-| `site.js` | The theme button (system → light → dark). |
-| `pixels.js` | The animated dot pattern behind the top of the page. |
-| `assets/` | Your photo, project screenshots, certificate images, the résumé PDF, and the tab icon. |
+| `index.html` | The page: one canvas for the film, plus a hidden text version of the whole story for screen readers, search engines, and browsers without JavaScript. |
+| `film.js` | Everything you see: the brush engine, the ten drawn scenes, the caption boxes, the camera moves, and the controls. |
+| `styles.css` | Makes the film fill the screen with no scrolling, and places the invisible real links over the drawn link boxes. |
+| `assets/` | The résumé PDF and the tab icon. (Older photos and screenshots are still here but no longer used.) |
 | `_headers` | Tells Cloudflare to have browsers re-check files before reusing saved copies, so edits show up right away. |
-| `_redirects` | The site used to have separate pages; this forwards old links like `/projects` to the right chapter. |
+| `_redirects` | Old links like `/projects` forward to the matching shot (for example `/#lipi-ai`). |
 | `archive/` | The very first version of the site, kept as a backup on this computer only (not in Git, not published). |
 
-## Adding a chapter
+## Changing the words
 
-Copy one `<section class="chapter">` block in `index.html`, change the number, date, title and paragraphs, and
-give it a new `id`. For a drawing, reuse a `data-scene` name from `SCENES` in `ink.js`; for a photo or
-screenshot, use a `<figure class="figure">` block like the ones in the Nepalingo or DiatoMeter chapters.
+Open `film.js` and find `SHOTS` near the bottom. Each shot has an `id`, the scene it draws, where its caption
+boxes sit (`anchor`: `tl` top-left, `tr`, `bl`, `br`, or `tc` top-center), how the camera arrives (`enter`:
+`pan`, `rise`, `zoom` or `wipe`), and its `lines`, the caption boxes in order. Keep each line short; long lines
+wrap onto two lines inside the box. If you change the story, update the hidden text version in `index.html` too.
 
-## Your photo
+You can link straight to a shot with its id, for example https://adthakur.com/#diatometer.
 
-Replace `assets/photo.jpg` (currently a 1200 x 1200 square, shown up to 520px wide). Frame it so there's room
-below your chin; a crop that ends at the chin looks like the head was cut off. If the new photo has a different
-shape, update the `width` and `height` on its `<img>` in `index.html`.
+## Controls
+
+- Next: click or tap (anywhere but the left edge), swipe left, or press → / Space / Enter.
+- Back: click the left edge, swipe right, or press ←.
+- Start over: Home, or the "watch again" box at the end.
 
 ## See it on your own computer
 
@@ -63,4 +67,3 @@ Deployments** lists every version, and any earlier one can be put back with one 
 ## Keeping it up to date
 
 - New résumé: replace `assets/aditya-thakur-resume.pdf` with the new PDF, keeping the same file name.
-- Different colors: change the tokens near the top of `styles.css` (one set for light mode, one for dark).

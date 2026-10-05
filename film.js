@@ -1,7 +1,8 @@
-// The ink drawings in each chapter, drawn live with JavaScript "brush strokes".
+// adthakur.com: the story so far, as a short film drawn live with JavaScript "brush strokes".
 // No images and no video: every frame is painted on a <canvas> from code.
-// Any <canvas class="ink" data-scene="..."> on the page gets the matching scene; it draws itself
-// the first time you scroll to it, then keeps gently "boiling" while it's on screen.
+//
+// How it plays: the viewer drives it. A click, tap, swipe or the arrow keys reveal the next caption;
+// after a shot's last caption the camera moves on to the next shot. All words live in the caption boxes.
 //
 // How the ink look works, in plain terms:
 //   1. Every line starts as a list of points with a little random wobble, like a shaky hand.
@@ -12,14 +13,14 @@
 //   4. About eight times a second every point is nudged slightly. That shimmer ("line boil") is
 //      what makes hand-drawn animation feel alive.
 //
-// The handwritten label on each drawing is in SCENES near the bottom. Change it there.
+// The words are in SHOTS near the bottom. Change them there.
 
 (function () {
   "use strict";
 
-  var canvases = document.querySelectorAll("canvas.ink[data-scene]");
-  if (!canvases.length || !canvases[0].getContext) return;
-  var ctx = null;   // the canvas being drawn right now (each drawing has its own)
+  var filmCanvas = document.getElementById("film");
+  if (!filmCanvas || !filmCanvas.getContext) return;
+  var ctx = null;   // the canvas being drawn on right now
 
   var W = 960, H = 540;          // drawing coordinates; the canvas is scaled to fit the page
   var INK = "#0e0d0c";
@@ -318,7 +319,7 @@
       brush(seg(790 - ww / 2 + (R() - 0.5) * 8, yy, 790 + ww / 2 + (R() - 0.5) * 8, yy, 0.4), 2.2, prog(t, 2 + k * 0.08, 0.3), {});
     }
 
-    var bx = 150 + t * 26, by = 452 + Math.sin(t * 1.6) * 2.5;
+    var bx = 150 + Math.min(t, 14) * 26, by = 452 + Math.sin(t * 1.6) * 2.5;
     brush(path([[bx - 50, by - 8], [bx - 30, by + 9], [bx + 30, by + 9], [bx + 52, by - 10]], 0.6), 4, prog(t, 1.6, 0.6), {});
     brush(seg(bx - 50, by - 8, bx + 52, by - 10, 0.5), 2, prog(t, 1.8, 0.5), {});
     brush(seg(bx + 4, by - 9, bx + 4, by - 78, 0.4), 2.4, prog(t, 2.0, 0.5), {});
@@ -331,7 +332,7 @@
     }
 
     for (var b = 0; b < 3; b++) {   // birds last: their wings change length as they flap
-      var cx = 300 + t * 30 + b * 34, cy = 120 + b * 12 + Math.sin(t * 3 + b) * 3, f = Math.sin(t * 8 + b * 2) * 3;
+      var cx = 300 + Math.min(t, 10) * 30 + b * 34, cy = 120 + b * 12 + Math.sin(t * 3 + b) * 3, f = Math.sin(t * 8 + b * 2) * 3;
       brush(path([[cx - 9, cy - 2 - f], [cx, cy + 3], [cx + 9, cy - 2 - f]], 0.2), 1.8, prog(t, 2.2 + b * 0.2, 0.3), { taper: 0.3 });
     }
   }
@@ -453,6 +454,15 @@
     var blink = t > 1 && Math.floor(t * 2.2) % 2 === 0 ? 1 : 0;
     fill(rectPts(lx + 18 + indents[lastK] * 18, ly + 15 + lastK * 15, 8, 12, 0.2), INK, blink);
 
+    // three framed certificates on the wall
+    for (var cf = 0; cf < 3; cf++) {
+      var cx0 = 556 + cf * 96, cy0 = 44, cp = prog(t, 2.6 + cf * 0.35, 0.5);
+      brush(rectPts(cx0, cy0, 80, 60, 0.4), 2.4, cp, { taper: 0.03 });
+      brush(seg(cx0 + 14, cy0 + 18, cx0 + 66, cy0 + 18, 0.2), 1.6, cp, { taper: 0.1 });
+      brush(seg(cx0 + 20, cy0 + 30, cx0 + 60, cy0 + 30, 0.2), 1.2, cp, { taper: 0.1, alpha: 0.7 });
+      brush(circlePts(cx0 + 58, cy0 + 45, 6, 0.2), 1.4, cp, { taper: 0.05 });
+    }
+
     // looking over my shoulder: a silhouette against the bright screen
     var pa = prog(t, 0.3, 0.8);
     fill(closed([[430, 540], [468, 486], [560, 452], [720, 452], [812, 486], [850, 540]], 1), INK, pa);
@@ -511,7 +521,6 @@
         mi++;
       }
     }
-    hand("→ english", px0 + 30, py0 + 252, 26, PAPER, "left", prog(t, 4.8, 0.4));
     for (var ln = 0; ln < 4; ln++) {
       brush(seg(px0 + 30, py0 + 280 + ln * 22, px0 + 140 + R() * 30, py0 + 280 + ln * 22, 0.3), 2.6, prog(t, 5.0 + ln * 0.25, 0.3), {});
     }
@@ -632,10 +641,10 @@
     }
 
     var ta = prog(t, 2.4, 0.4);
-    hand("n = " + count, 742, 150, 40, PAPER, "left", ta);
-    hand(Math.min(15, Math.round(sweep * 15)) + " s", 742, 196, 30, PAPER, "left", ta);
-    brush(seg(60, 500, 120, 500, 0.2), 3, prog(t, 1.2, 0.4), { taper: 0.05 });
-    hand("10 µm", 60, 526, 20, PAPER, "left", prog(t, 1.4, 0.4));
+    fill(rectPts(722, 112, 168, 104, 0.8), PAPER, ta);
+    brush(rectPts(716, 106, 180, 116, 0.8), 1.4, ta, { taper: 0.04 });
+    hand("n = " + count, 742, 157, 36, INK, "left", ta);
+    hand(Math.min(15, Math.round(sweep * 15)) + " s", 742, 198, 28, INK, "left", ta);
   }
 
   // ---------------------------------------------------------------- scene 7: the road on
@@ -653,32 +662,172 @@
       var gx = R() * W, gy = 320 + R() * 220, gl = 4 + (gy - 300) * 0.05;
       brush(seg(gx, gy, gx + 2, gy - gl, 0.2), 1.4, prog(t, 1.4 + R() * 1.4, 0.2), { alpha: 0.6 });
     }
-    hand("— aditya", 900, 506, 42, PAPER, "right", prog(t, 4.2, 0.8));
 
     var wu = 0.12 + 0.55 * prog(t, 1.2, 5.2), wp = pointAt(roadPts, wu);
-    walker(wp[0], wp[1] + 2, 1 - wu * 0.75, prog(t, 1.0, 0.4), t);   // last: the legs swing
+    walker(wp[0], wp[1] + 2, 1 - wu * 0.75, prog(t, 1.0, 0.4), prog(t, 1.2, 5.2) < 1 ? t : 0);   // last: the legs swing
   }
 
-  // ---------------------------------------------------------------- the scenes and their labels
-  var SCENES = {
-    pokhara:   { cap: "pokhara, nepal.",                  dur: 7.5, seed: 11, draw: sPokhara },
-    library:   { cap: "budhanilkantha school.",           dur: 8,   seed: 22, draw: sLibrary },
-    stone:     { cap: "teaching a phone to read stone.",  dur: 8,   seed: 44, draw: sStone },
-    night:     { cap: "learning to build.",               dur: 7.5, seed: 33, draw: sNight },
-    lexington: { cap: "lexington, virginia.",             dur: 8,   seed: 55, draw: sLexington },
-    micro:     { cap: "136 shells. 15 seconds.",          dur: 8.5, seed: 66, draw: sMicro },
-    road:      { cap: "still building.",                  dur: 7.5, seed: 77, draw: sEnd }
-  };
-
-  function caption(str, t) {
-    var chars = reduceMotion ? str.length : Math.max(0, Math.min(str.length, Math.floor((t - 0.35) * 17)));
-    ctx.font = "700 30px " + HAND;
-    var tw = ctx.measureText(str).width, x = 24, y = 20, bw = Math.ceil(tw) + 36, bh = 48;
-    var box = rectPts(x, y, bw, bh, 0.9), frame = rectPts(x - 6, y - 6, bw + 12, bh + 12, 0.9);
-    fill(box, PAPER, prog(t, 0.05, 0.3));
-    brush(frame, 1.6, prog(t, 0.15, 0.6), { taper: 0.04 });
-    if (chars > 0) hand(str.slice(0, chars), x + 18, y + 34, 30, INK);
+  // ---------------------------------------------------------------- title shot
+  function sTitle(t) {
+    stars(90, 0, 0, W, 390, t, 0);
+    fill(circlePts(800, 110, 26, 0.4), PAPER, prog(t, 0.4, 0.6));
+    fill(circlePts(812, 102, 24, 0.4), INK, prog(t, 0.4, 0.6));
+    brush(path([[0, 422], [120, 404], [260, 414], [380, 398], [520, 412], [640, 400], [800, 414], [960, 404]], 0.8), 2.2, prog(t, 0.3, 1.6), {});
+    for (var g = 0; g < 46; g++) {
+      var gx = R() * W, gy = 432 + R() * 100, gl = 4 + (gy - 430) * 0.06;
+      brush(seg(gx, gy, gx + 2, gy - gl, 0.2), 1.4, prog(t, 1.2 + R() * 1.2, 0.2), { alpha: 0.6 });
+    }
+    // me, standing on the hill, looking up
+    var fa = prog(t, 1.0, 0.6), fx = 480, fy = 408;
+    fill(circlePts(fx, fy - 48, 8.5, 0.3), PAPER, fa);
+    fill(closed([[fx - 9, fy - 37], [fx + 9, fy - 37], [fx + 11, fy - 14], [fx - 11, fy - 14]], 0.3), PAPER, fa);
+    fill(rectPts(fx + 8, fy - 35, 8, 17, 0.2), PAPER, fa);
+    brush(seg(fx - 5, fy - 14, fx - 6, fy + 2, 0.2), 3.6, fa, {});
+    brush(seg(fx + 5, fy - 14, fx + 6, fy + 2, 0.2), 3.6, fa, {});
+    // a shooting star every few seconds (last: it moves)
+    var sp = ((t + 2) % 7) / 7, u = Math.min(1, sp / 0.18);
+    var sx = lerp(560, 820, u), sy = lerp(70, 170, u);
+    brush(seg(sx - 70, sy - 27, sx, sy, 0.3), 2.2, sp < 0.18 ? 1 : 0, { alpha: 0.85, taper: 0.7, still: true });
   }
+
+  // ---------------------------------------------------------------- Nepalingo: flashcards, a quiz, merged pull requests
+  function rotRect(cx, cy, w, h, a, wob) {
+    var c = Math.cos(a), s = Math.sin(a);
+    return closed([[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map(function (p) {
+      return [cx + p[0] * c - p[1] * s, cy + p[0] * s + p[1] * c];
+    }), wob);
+  }
+
+  function sCards(t) {
+    brush(seg(40, 440, 920, 440, 0.8), 3, prog(t, 0.2, 1), { taper: 0.05 });
+    var back1 = rotRect(430, 262, 270, 176, -0.16, 0.8), back2 = rotRect(530, 258, 270, 176, 0.13, 0.8);
+    fill(back1, PAPER, prog(t, 0.4, 0.4) * 0.45);
+    brush(back1, 2, prog(t, 0.4, 0.8), { taper: 0.03 });
+    fill(back2, PAPER, prog(t, 0.6, 0.4) * 0.7);
+    brush(back2, 2, prog(t, 0.6, 0.8), { taper: 0.03 });
+
+    // the daily quiz
+    var qa = prog(t, 2.4, 0.5);
+    brush(rectPts(770, 120, 150, 180, 0.6), 2.2, qa, { taper: 0.03 });
+    for (var q = 0; q < 3; q++) {
+      brush(circlePts(798, 166 + q * 44, 9, 0.2), 1.8, prog(t, 2.6 + q * 0.15, 0.3), { taper: 0.05 });
+      brush(seg(818, 166 + q * 44, 894, 166 + q * 44, 0.3), 2.2, prog(t, 2.7 + q * 0.15, 0.3), {});
+    }
+    brush(path([[789, 208], [797, 218], [812, 196]], 0.2), 3, prog(t, 3.4, 0.3), { taper: 0.1 });
+
+    // eleven merged pull requests
+    brush(seg(190, 492, 790, 492, 0.4), 2, prog(t, 2.8, 1.2), {});
+    for (var m = 0; m < 11; m++) {
+      var mx = 214 + m * 54, mp = prog(t, 3.0 + m * 0.12, 0.25);
+      brush(path([[mx - 28, 468], [mx - 10, 471], [mx, 488]], 0.2), 1.6, mp, { alpha: 0.8 });
+      fill(circlePts(mx, 492, 5, 0.2), PAPER, mp);
+    }
+
+    // the front card flips over (its width changes, so it comes late)
+    var fp = prog(t, 3.4, 0.6), sx = Math.abs(Math.cos(fp * Math.PI)), showBack = fp > 0.5;
+    var fw = 270 * Math.max(0.04, sx), ca = prog(t, 0.8, 0.4), inside = ca * (sx > 0.55 ? 1 : 0);
+    var card = closed([[480 - fw / 2, 168], [480 + fw / 2, 168], [480 + fw / 2, 346], [480 - fw / 2, 346]], 0.6);
+    fill(card, PAPER, ca);
+    brush(card, 2.6, prog(t, 0.8, 0.8), { color: INK, taper: 0.03 });
+    // front: a speaker with sound waves and a word
+    fill(closed([[420, 242], [432, 242], [448, 228], [448, 284], [432, 270], [420, 270]], 0.3), INK, showBack ? 0 : inside);
+    for (var k = 0; k < 3; k++) {
+      var pulse = reduceMotion ? 1 : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 4 - k * 0.9));
+      brush(arcPts(452, 256, 14 + k * 11, 14 + k * 11, -0.7, 0.7, 0.2), 2.4, 1, { color: INK, alpha: (showBack ? 0 : inside) * pulse, taper: 0.2 });
+    }
+    brush(path([[506, 244], [520, 238], [534, 248], [548, 238], [562, 246]], 0.4), 3.2, 1, { color: INK, alpha: showBack ? 0 : inside });
+    brush(seg(506, 272, 552, 272, 0.3), 2, 1, { color: INK, alpha: (showBack ? 0 : inside) * 0.6 });
+    // back: the meaning, written out
+    brush(path([[426, 236], [446, 230], [470, 240], [494, 230], [520, 238], [536, 232]], 0.4), 3, 1, { color: INK, alpha: showBack ? inside : 0 });
+    brush(path([[436, 268], [470, 262], [500, 270], [526, 264]], 0.4), 2.4, 1, { color: INK, alpha: (showBack ? inside : 0) * 0.7 });
+
+    // a streak flame (last: it flickers)
+    var fla = prog(t, 2.0, 0.5), fxf = 140, fyf = 262, fk = reduceMotion ? 0 : Math.sin(t * 7) * 3;
+    function F(p) { return [fxf + p[0], fyf + p[1]]; }
+    fill(closed([[4 + fk, -66], [16, -40], [26, -16], [28, 6], [18, 24], [0, 30], [-18, 24], [-28, 6], [-24, -18], [-14, -34], [-12, -20], [-4, -40]].map(F), 0.5), PAPER, fla);
+    fill(closed([[2 - fk * 0.4, -30], [12, -8], [10, 10], [0, 18], [-10, 10], [-10, -6], [-4, -2]].map(F), 0.3), INK, fla);
+  }
+
+  // ---------------------------------------------------------------- summer 2026: Thoreau's cabin (walden.life) and an answer sheet (SATitude)
+  function sSummer(t) {
+    brush(seg(40, 330, 480, 330, 0.6), 2, prog(t, 0.2, 0.8), {});
+    var pond = arcPts(250, 384, 150, 34, 0, Math.PI * 2, 0.8);
+    fill(pond, PAPER, prog(t, 0.5, 0.5) * 0.16);
+    brush(pond, 2.2, prog(t, 0.5, 1), { taper: 0.04 });
+    for (var r = 0; r < 6; r++) {
+      brush(seg(162 + r * 30, 380 + (r % 2) * 10, 190 + r * 30, 380 + (r % 2) * 10, 0.3), 1.4, prog(t, 1.2 + r * 0.06, 0.3), { alpha: 0.7 });
+    }
+    var ca = prog(t, 0.8, 0.8);
+    brush(rectPts(300, 272, 70, 58, 0.5), 2.4, ca, { taper: 0.03 });
+    brush(path([[292, 274], [335, 238], [378, 274]], 0.4), 2.6, ca, {});
+    brush(rectPts(328, 298, 16, 32, 0.3), 1.8, ca, { taper: 0.03 });
+    brush(seg(356, 252, 356, 232, 0.2), 3, ca, {});
+    [[70, 330, 80], [108, 330, 64], [146, 330, 92], [420, 330, 78], [454, 330, 60]].forEach(function (tr, k) {
+      var tp = prog(t, 1.0 + k * 0.1, 0.5);
+      brush(seg(tr[0], tr[1], tr[0], tr[1] - tr[2], 0.3), 2, tp, {});
+      for (var b = 0; b < 4; b++) {
+        var by = tr[1] - tr[2] * (0.25 + b * 0.2), bw = tr[2] * (0.32 - b * 0.06);
+        brush(path([[tr[0] - bw, by + 6], [tr[0], by - 8], [tr[0] + bw, by + 6]], 0.3), 1.8, tp, {});
+      }
+    });
+    // a timeline of daily entries
+    brush(seg(60, 474, 470, 474, 0.4), 2, prog(t, 1.6, 0.8), {});
+    for (var d = 0; d < 50; d++) {
+      var dx = 64 + d * 8, tall = d % 10 === 0;
+      brush(seg(dx, 474, dx, tall ? 455 : 465, 0.1), tall ? 2 : 1.3, prog(t, 1.8 + d * 0.03, 0.15), {});
+    }
+
+    // the answer sheet, bubbles filling in
+    var sa = prog(t, 0.6, 0.5);
+    fill(rectPts(560, 104, 310, 350, 0.8), PAPER, sa);
+    for (var row = 0; row < 7; row++) {
+      var y = 156 + row * 42, pick = Math.floor(R() * 4);
+      brush(seg(584, y, 604, y, 0.1), 2.2, sa, { color: INK, taper: 0 });
+      for (var c = 0; c < 4; c++) {
+        var bx = 650 + c * 52, ring = circlePts(bx, y, 11, 0.2);
+        brush(ring, 1.6, prog(t, 0.9 + row * 0.08, 0.3), { color: INK, taper: 0.05 });
+        fill(circlePts(bx, y, 8, 0.2), INK, c === pick ? prog(t, 2.2 + row * 0.35, 0.2) : 0);
+      }
+    }
+
+    // chimney smoke (last: it drifts)
+    var smoke = [];
+    for (var i = 0; i <= 6; i++) smoke.push([356 + Math.sin(i * 0.9 + t * 1.8) * 5 + i * 3, 228 - i * 12]);
+    brush(smoke, 2, prog(t, 1.6, 0.8), { alpha: 0.7, taper: 0.4, still: true });
+  }
+
+  // ---------------------------------------------------------------- the film: shots and their caption lines
+  // "enter" is the camera move used to arrive at that shot.
+  var SHOTS = [
+    { id: "title", draw: sTitle, seed: 101, anchor: "tc", auto: true, enter: null,
+      lines: ["aditya bikram thakur.", "math + cs at washington and lee.", "click, tap or press → to begin."] },
+    { id: "pokhara", draw: sPokhara, seed: 11, anchor: "tl", enter: "wipe",
+      lines: ["i grew up in pokhara, nepal.", "under machhapuchhre, the “fish tail” mountain."] },
+    { id: "school", draw: sLibrary, seed: 22, anchor: "tl", enter: "pan",
+      lines: ["budhanilkantha school, kathmandu.", "a levels in physics, chemistry, computer science and math. A* in all four.", "valedictorian. 1600 on the sat."] },
+    { id: "lipi-ai", draw: sStone, seed: 44, anchor: "bl", enter: "pan",
+      lines: ["summer 2023: lipi ai.", "an app that reads tibetan inscriptions from a phone photo.", "i built the backend: splitting stacked letters so ocr can read them."] },
+    { id: "nepalingo", draw: sCards, seed: 88, anchor: "tl", enter: "pan",
+      lines: ["summer 2024: nepalingo.", "an open-source app for learning nepal’s indigenous languages.", "i built the flashcards, daily quiz and activity cards. 11 merged pull requests."] },
+    { id: "courses", draw: sNight, seed: 33, anchor: "br", enter: "pan",
+      lines: ["2025: learning on my own.", "the algorithms and machine learning specializations from stanford.", "and harvard’s cs50 ai: twelve projects."] },
+    { id: "summer-builds", draw: sSummer, seed: 99, anchor: "tl", enter: "pan",
+      lines: ["summer 2026: two projects of my own.", "walden.life: thoreau’s walden, one day at a time.", "satitude: practice for the digital sat."] },
+    { id: "lexington", draw: sLexington, seed: 55, anchor: "tl", enter: "rise",
+      lines: ["august 2026: about 12,000 km later.", "washington and lee university, lexington, virginia.", "a math + cs double major, on a full-ride scholarship."] },
+    { id: "diatometer", draw: sMicro, seed: 66, anchor: "tl", enter: "zoom",
+      lines: ["september 2026: diatometer.", "with william & mary’s nano & biomaterials lab: measuring tiny glass algae shells.", "136 shells measured in about 15 seconds."] },
+    { id: "today", draw: sEnd, seed: 77, anchor: "tl", enter: "wipe", links: true,
+      lines: ["still building.", "say hello:"] }
+  ];
+  var ALIASES = { contact: "today", projects: "lipi-ai", experience: "school" };
+  var LINKS = [
+    { label: "email", href: "mailto:thakura30@wlu.edu", aria: "Email Aditya at thakura30@wlu.edu" },
+    { label: "github ↗", href: "https://github.com/sirElvinn", aria: "Aditya on GitHub", ext: true },
+    { label: "linkedin ↗", href: "https://www.linkedin.com/in/aditya-thakur-a76501266/", aria: "Aditya on LinkedIn", ext: true },
+    { label: "résumé ↗", href: "assets/aditya-thakur-resume.pdf", aria: "Aditya's résumé (PDF)", ext: true },
+    { label: "watch again ↺", restart: true, aria: "Watch the story again from the start" }
+  ];
 
   // ---------------------------------------------------------------- film grain
   var grainCanvas = document.createElement("canvas");
@@ -693,85 +842,388 @@
     g.putImageData(img, 0, 0);
   })();
 
-  // ---------------------------------------------------------------- one "view" per drawing on the page
-  var views = [];
-  Array.prototype.forEach.call(canvases, function (cv) {
-    var scene = SCENES[cv.getAttribute("data-scene")];
-    if (!scene) return;
-    var c2 = cv.getContext("2d");
-    var vig = c2.createRadialGradient(W / 2, H / 2, 220, W / 2, H / 2, 620);
-    vig.addColorStop(0, "rgba(0,0,0,0)");
-    vig.addColorStop(1, "rgba(0,0,0,0.5)");
-    views.push({ canvas: cv, ctx: c2, scene: scene, start: null, visible: false, scale: 1,
-                 grain: c2.createPattern(grainCanvas, "repeat"), vignette: vig, drawnStill: false });
-  });
+  // ---------------------------------------------------------------- screen layout
+  var main = filmCanvas.getContext("2d");
+  var grainPat = main.createPattern(grainCanvas, "repeat");
+  var bufA = document.createElement("canvas"), bufB = document.createElement("canvas");
+  var bctxA = bufA.getContext("2d"), bctxB = bufB.getContext("2d");
+  var dpr = 1, VW = 0, VH = 0, portrait = false, capSize = 24, vignette = null;
+  var film = { x: 0, y: 0, w: 0, h: 0 };
 
-  function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    views.forEach(function (v) {
-      var r = v.canvas.getBoundingClientRect();
-      v.canvas.width = Math.max(1, Math.round(r.width * dpr));
-      v.canvas.height = Math.max(1, Math.round(((r.width * 9) / 16) * dpr));
-      v.scale = v.canvas.width / W;
-      v.drawnStill = false;
-    });
+  function layout() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    VW = window.innerWidth;
+    VH = window.innerHeight;
+    filmCanvas.width = Math.round(VW * dpr);
+    filmCanvas.height = Math.round(VH * dpr);
+    portrait = VW / VH < 1.05;
+    var m = portrait ? 12 : Math.max(16, Math.min(VW, VH) * 0.035);
+    var fw = VW - m * 2, fh = (fw * 9) / 16;
+    var maxH = portrait ? VH * 0.46 : VH - m * 2 - 30;
+    if (fh > maxH) { fh = maxH; fw = (fh * 16) / 9; }
+    film.w = fw; film.h = fh;
+    film.x = (VW - fw) / 2;
+    film.y = portrait ? Math.max(20, Math.min(VH * 0.2, VH - fh - 330)) : Math.max(m, (VH - fh) / 2 - 12);
+    [bufA, bufB].forEach(function (b) { b.width = Math.max(1, Math.round(fw * dpr)); b.height = Math.max(1, Math.round(fh * dpr)); });
+    capSize = portrait ? Math.max(16, Math.min(21, VW * 0.048)) : Math.max(15, Math.min(28, fw * 0.022));
+    vignette = main.createRadialGradient(film.x + fw / 2, film.y + fh / 2, fh * 0.42, film.x + fw / 2, film.y + fh / 2, fw * 0.66);
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.5)");
   }
 
-  function render(v, t) {
-    ctx = v.ctx;
-    ctx.setTransform(v.scale, 0, 0, v.scale, 0, 0);
+  function renderScene(i, t, bctx, bw) {
+    ctx = bctx;
+    var s = bw / W;
+    ctx.setTransform(s, 0, 0, s, 0, 0);
     ctx.globalAlpha = 1;
     ctx.fillStyle = INK;
     ctx.fillRect(0, 0, W, H);
-
-    sid = 0; R = mulberry32(v.scene.seed);
-    v.scene.draw(t);
-    sid = 50000; R = mulberry32(777);
-    caption(v.scene.cap, t);
-
-    ctx.save();
-    ctx.globalAlpha = 0.05;
-    ctx.translate(-((boil * 37) % 160), -((boil * 23) % 160));
-    ctx.fillStyle = v.grain;
-    ctx.fillRect(0, 0, W + 160, H + 160);
-    ctx.restore();
-    ctx.fillStyle = v.vignette;
-    ctx.fillRect(0, 0, W, H);
+    sid = 0; R = mulberry32(SHOTS[i].seed);
+    SHOTS[i].draw(t);
   }
 
-  var last = 0;
+  // ---------------------------------------------------------------- state
+  var cur = 0, beat = 0, shotStart = 0, lineStarts = [], trans = null;
+  var TYPE_CPS = 45, CAPTION_DELAY = 650;
+
+  function typedDone(k, now) {
+    var len = SHOTS[cur].lines[k].length;
+    return now - lineStarts[k] >= (len / TYPE_CPS) * 1000;
+  }
+
+  function enterShot(i, dir, now) {
+    var s = SHOTS[i];
+    cur = i;
+    lineStarts = [];
+    if (dir < 0 || reduceMotion) {
+      // arriving backwards (or without motion): everything already drawn and written
+      shotStart = now - 60000;
+      beat = s.lines.length;
+      for (var k = 0; k < beat; k++) lineStarts.push(now - 100000);
+    } else {
+      shotStart = now;
+      var delay = (trans ? trans.dur : 0) + CAPTION_DELAY;
+      if (s.auto) {
+        beat = s.lines.length;
+        for (var j = 0; j < beat; j++) lineStarts.push(now + delay + j * 1300);
+      } else {
+        beat = 1;
+        lineStarts.push(now + delay);
+      }
+    }
+    try { history.replaceState(null, "", i === 0 ? location.pathname : "#" + s.id); } catch (e) {}
+    announce();
+  }
+
+  function go(i, dir) {
+    var now = performance.now();
+    if (i < 0 || i >= SHOTS.length) return;
+    trans = reduceMotion ? null : {
+      from: cur, fromStart: shotStart, type: dir > 0 ? SHOTS[i].enter : SHOTS[cur].enter,
+      dir: dir, start: now, dur: 1050
+    };
+    if (trans && !trans.type) trans.type = "pan";
+    enterShot(i, dir, now);
+  }
+
+  function next() {
+    var now = performance.now();
+    if (trans) { trans = null; return; }
+    var s = SHOTS[cur], typing = false;
+    for (var k = 0; k < beat; k++) {
+      if (!typedDone(k, now)) { lineStarts[k] = now - 100000; typing = true; }
+    }
+    if (typing) { announce(); return; }
+    if (beat < s.lines.length) { lineStarts[beat] = now; beat++; announce(); return; }
+    if (cur < SHOTS.length - 1) go(cur + 1, 1);
+  }
+
+  function prev() {
+    if (trans) trans = null;
+    if (!SHOTS[cur].auto && beat > 1) { beat--; announce(); return; }
+    if (cur > 0) go(cur - 1, -1);
+  }
+
+  function restart() { trans = null; go(0, 1); }
+
+  // ---------------------------------------------------------------- captions (drawn in screen space, so they stay readable)
+  var HAND_FONT = function (size) { return "700 " + size + "px " + HAND; };
+
+  function wrap(text, maxW, size) {
+    main.font = HAND_FONT(size);
+    var words = text.split(" "), lines = [], line = "";
+    for (var i = 0; i < words.length; i++) {
+      var test = line ? line + " " + words[i] : words[i];
+      if (line && main.measureText(test).width > maxW) { lines.push(line); line = words[i]; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    var w = 0;
+    lines.forEach(function (l) { w = Math.max(w, main.measureText(l).width); });
+    return { lines: lines, w: w };
+  }
+
+  // Lay out a stack of boxes for the given texts at the shot's anchor (or below the film on tall screens).
+  function stack(texts, size, anchor, big) {
+    var padX = size * 0.75, padY = size * 0.5, lineH = size * 1.22, gap = size * 0.75, m = size * 0.95;
+    var maxW = portrait ? VW - 32 - padX * 2 : film.w * (anchor === "tc" ? 0.62 : 0.46);
+    var boxes = texts.map(function (tx, k) {
+      var sz = big && k === 0 ? size * 1.5 : size, px = sz * 0.75, py = sz * 0.5, lh = sz * 1.22;
+      var r = wrap(tx, maxW, sz);
+      return { text: tx, lines: r.lines, w: r.w + px * 2, h: r.lines.length * lh + py * 2 - lh * 0.18, padX: px, padY: py, lineH: lh, size: sz };
+    });
+    var total = boxes.reduce(function (a, b) { return a + b.h; }, 0) + gap * Math.max(0, boxes.length - 1);
+    var y = portrait ? film.y + film.h + 22
+      : anchor.charAt(0) === "b" ? film.y + film.h - m - total : film.y + m;
+    boxes.forEach(function (b) {
+      if (portrait) b.x = 16;
+      else if (anchor === "tc") b.x = film.x + (film.w - b.w) / 2;
+      else if (anchor.charAt(1) === "r") b.x = film.x + film.w - m - b.w;
+      else b.x = film.x + m;
+      b.y = y;
+      y += b.h + gap;
+    });
+    return { boxes: boxes, bottom: y - gap };
+  }
+
+  function drawBox(b, key, a, chars) {
+    sid = 60000 + key * 50; R = mulberry32(1000 + key);
+    fill(rectPts(b.x - 9, b.y - 9, b.w + 18, b.h + 18, 1), INK, a);   // dark mat, so the box reads on light drawings too
+    fill(rectPts(b.x, b.y, b.w, b.h, 1), PAPER, a);
+    brush(rectPts(b.x - 5, b.y - 5, b.w + 10, b.h + 10, 1), 1.6, Math.min(1, a * 1.4), { taper: 0.04, alpha: a });
+    var left = chars == null ? 1e9 : chars;
+    for (var i = 0; i < b.lines.length && left > 0; i++) {
+      var str = b.lines[i].slice(0, Math.max(0, left));
+      left -= b.lines[i].length + 1;
+      hand(str, b.x + b.padX, b.y + b.padY + b.size * 0.86 + i * b.lineH, b.size, INK, "left", a);
+    }
+  }
+
+  var linkRects = [];
+  function drawCaptions(now, fade) {
+    ctx = main;
+    main.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var s = SHOTS[cur], texts = s.lines.slice(0, beat);
+    var st = stack(texts, capSize, s.anchor, s.auto);
+    st.boxes.forEach(function (b, k) {
+      var since = now - lineStarts[k];
+      if (since < 0) return;
+      var a = clamp01(since / 260) * fade;
+      var chars = reduceMotion ? null : Math.floor((since / 1000) * TYPE_CPS);
+      drawBox(b, cur * 10 + k, a, chars);
+    });
+    linkRects = [];
+    if (s.links && beat >= s.lines.length) {
+      var lastStart = lineStarts[s.lines.length - 1], size = capSize * 0.92;
+      var x = st.boxes.length ? st.boxes[0].x : film.x + 20, y = st.bottom + capSize * 0.9;
+      var maxX = portrait ? VW - 16 : film.x + film.w - capSize;
+      LINKS.forEach(function (L, j) {
+        var r = wrap(L.label, 1e4, size), padX = size * 0.7, padY = size * 0.45;
+        var b = { text: L.label, lines: [L.label], w: r.w + padX * 2, h: size * 1.22 + padY * 2 - size * 0.22, padX: padX, padY: padY, lineH: size * 1.22, size: size };
+        if (x + b.w > maxX && j > 0) { x = st.boxes.length ? st.boxes[0].x : film.x + 20; y += b.h + size * 0.7; }
+        b.x = x; b.y = y;
+        x += b.w + size * 0.9;
+        var since = now - (lastStart + 500 + j * 160);
+        var a = reduceMotion ? fade : clamp01(since / 260) * fade;
+        if (a > 0) { drawBox(b, 900 + j, a, null); linkRects.push({ i: j, x: b.x - 5, y: b.y - 5, w: b.w + 10, h: b.h + 10 }); }
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------- the frame around the film, progress dots, edge arrows
+  function drawFilmChrome(now) {
+    ctx = main;
+    main.setTransform(dpr, 0, 0, dpr, 0, 0);
+    main.save();
+    main.globalAlpha = 0.05;
+    main.translate(-((boil * 37) % 160), -((boil * 23) % 160));
+    main.fillStyle = grainPat;
+    main.fillRect(0, 0, VW + 160, VH + 160);
+    main.restore();
+    main.fillStyle = vignette;
+    main.fillRect(film.x, film.y, film.w, film.h);
+    sid = 70000; R = mulberry32(4242);
+    brush(rectPts(film.x - 2, film.y - 2, film.w + 4, film.h + 4, 0.9), 1.6, 1, { taper: 0.02, alpha: 0.5 });
+
+    var n = SHOTS.length, gapD = 14, dy = portrait ? VH - 26 : film.y + film.h + 22, x0 = VW / 2 - ((n - 1) * gapD) / 2;
+    for (var i = 0; i < n; i++) {
+      main.beginPath();
+      main.arc(x0 + i * gapD, dy, i === cur ? 3.6 : 2.6, 0, Math.PI * 2);
+      main.globalAlpha = i === cur ? 0.95 : 0.35;
+      main.fillStyle = PAPER;
+      main.fill();
+    }
+    main.globalAlpha = 1;
+
+    // edge arrows: shown on hover with a mouse, and pulsing on the title shot as a hint
+    var showNext = (hover === "next") || (cur === 0 && !reduceMotion);
+    var showPrev = hover === "prev" && cur > 0;
+    var cy = film.y + film.h / 2, sz = Math.max(12, capSize * 0.7);
+    if (showNext && !(cur === SHOTS.length - 1 && beat >= SHOTS[cur].lines.length)) {
+      var pulse = cur === 0 && hover !== "next" ? 0.35 + 0.35 * Math.sin(now / 400) : 0.75;
+      var ax = film.x + film.w - sz * 1.6;
+      brush(path([[ax - sz * 0.4, cy - sz], [ax + sz * 0.5, cy], [ax - sz * 0.4, cy + sz]], 0.3), 3, 1, { alpha: Math.max(0, pulse), taper: 0.3 });
+    }
+    if (showPrev) {
+      var bx = film.x + sz * 1.6;
+      brush(path([[bx + sz * 0.4, cy - sz], [bx - sz * 0.5, cy], [bx + sz * 0.4, cy + sz]], 0.3), 3, 1, { alpha: 0.75, taper: 0.3 });
+    }
+  }
+
+  // ---------------------------------------------------------------- camera moves between shots
+  function compose(e) {
+    var tr = trans, d = tr.dir;
+    main.save();
+    main.beginPath();
+    main.rect(film.x, film.y, film.w, film.h);
+    main.clip();
+    if (tr.type === "pan") {
+      main.drawImage(bufB, film.x - d * e * film.w, film.y, film.w, film.h);
+      main.drawImage(bufA, film.x + d * (1 - e) * film.w, film.y, film.w, film.h);
+    } else if (tr.type === "rise") {
+      main.drawImage(bufB, film.x, film.y + d * e * film.h, film.w, film.h);
+      main.drawImage(bufA, film.x, film.y - d * (1 - e) * film.h, film.w, film.h);
+    } else if (tr.type === "zoom") {
+      var cx = film.x + film.w / 2, cy = film.y + film.h / 2;
+      var so = d > 0 ? 1 + e * 1.4 : 1 - e * 0.3, si = d > 0 ? 0.82 + e * 0.18 : 2.4 - e * 1.4;
+      main.globalAlpha = 1 - e;
+      main.drawImage(bufB, cx - (film.w * so) / 2, cy - (film.h * so) / 2, film.w * so, film.h * so);
+      main.globalAlpha = e;
+      main.drawImage(bufA, cx - (film.w * si) / 2, cy - (film.h * si) / 2, film.w * si, film.h * si);
+      main.globalAlpha = 1;
+    } else {
+      // wipe: a big ink brush sweeps across, then pulls away to reveal the next shot
+      var covering = e < 0.5, q = covering ? e / 0.5 : 1 - (e - 0.5) / 0.5;
+      main.drawImage(covering ? bufB : bufA, film.x, film.y, film.w, film.h);
+      ctx = main;
+      main.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sid = 80000; R = mulberry32(31);
+      for (var k = 0; k < 5; k++) {
+        var y0 = film.y + film.h * (-0.05 + k * 0.24), lean = film.h * 0.18;
+        var pts = d > 0
+          ? path([[film.x - 60, y0], [film.x + film.w * 0.5, y0 + lean * 0.6], [film.x + film.w + 60, y0 + lean]], 3)
+          : path([[film.x + film.w + 60, y0 + lean], [film.x + film.w * 0.5, y0 + lean * 0.6], [film.x - 60, y0]], 3);
+        brush(pts, film.h * 0.36, clamp01(q * 1.25 - k * 0.06), { color: INK, taper: 0.06, still: true });
+      }
+    }
+    main.restore();
+  }
+
+  // ---------------------------------------------------------------- the loop
+  var lastFrame = 0;
   function frame(now) {
     requestAnimationFrame(frame);
-    if (now - last < 1000 / 30) return;   // 30 frames a second is plenty for ink
-    last = now;
+    if (now - lastFrame < 1000 / 30) return;
+    lastFrame = now;
     boil = reduceMotion ? 0 : Math.floor(now / 120) % 5;
-    views.forEach(function (v) {
-      if (!v.visible) return;
-      if (reduceMotion) {
-        if (!v.drawnStill) { render(v, v.scene.dur); v.drawnStill = true; }
-        return;
-      }
-      if (v.start == null) v.start = now;
-      render(v, Math.min(v.scene.dur, Math.max(0, (now - v.start) / 1000)));
+
+    main.setTransform(dpr, 0, 0, dpr, 0, 0);
+    main.globalAlpha = 1;
+    main.fillStyle = INK;
+    main.fillRect(0, 0, VW, VH);
+
+    var tCur = reduceMotion ? 60 : (now - shotStart) / 1000;
+    renderScene(cur, tCur, bctxA, bufA.width);
+    var fade = 1;
+    if (trans) {
+      var p = clamp01((now - trans.start) / trans.dur), e = easeInOut(p);
+      renderScene(trans.from, (now - trans.fromStart) / 1000, bctxB, bufB.width);
+      main.setTransform(dpr, 0, 0, dpr, 0, 0);
+      compose(e);
+      fade = e;
+      if (p >= 1) trans = null;
+    } else {
+      main.setTransform(dpr, 0, 0, dpr, 0, 0);
+      main.drawImage(bufA, film.x, film.y, film.w, film.h);
+    }
+    drawFilmChrome(now);
+    drawCaptions(now, fade);
+    placeLinks();
+  }
+
+  // ---------------------------------------------------------------- real links over the drawn boxes (clickable, keyboard-reachable)
+  var linkEls = LINKS.map(function (L, j) {
+    var el;
+    if (L.restart) {
+      el = document.createElement("button");
+      el.type = "button";
+      el.addEventListener("click", function (ev) { ev.stopPropagation(); restart(); filmCanvas.focus(); });
+    } else {
+      el = document.createElement("a");
+      el.href = L.href;
+      if (L.ext) { el.target = "_blank"; el.rel = "noopener"; }
+    }
+    el.className = "film-link";
+    el.setAttribute("aria-label", L.aria);
+    el.hidden = true;
+    document.body.appendChild(el);
+    return el;
+  });
+  function placeLinks() {
+    var shown = {};
+    linkRects.forEach(function (r) {
+      var el = linkEls[r.i];
+      shown[r.i] = true;
+      el.hidden = false;
+      el.style.left = r.x + "px"; el.style.top = r.y + "px";
+      el.style.width = r.w + "px"; el.style.height = r.h + "px";
     });
+    linkEls.forEach(function (el, j) { if (!shown[j]) el.hidden = true; });
   }
 
-  if ("IntersectionObserver" in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        var v = views.filter(function (x) { return x.canvas === e.target; })[0];
-        if (v) v.visible = e.isIntersecting;
-      });
-    }, { threshold: 0.15 });
-    views.forEach(function (v) { io.observe(v.canvas); });
-  } else {
-    views.forEach(function (v) { v.visible = true; });
+  // ---------------------------------------------------------------- screen readers: say each caption as it appears
+  var live = document.getElementById("film-live");
+  function announce() {
+    if (!live) return;
+    var s = SHOTS[cur];
+    live.textContent = s.lines.slice(0, beat).join(" ") + (s.links && beat >= s.lines.length ? " Links: email, GitHub, LinkedIn, résumé." : "");
   }
 
-  window.addEventListener("resize", resize);
-  resize();
+  // ---------------------------------------------------------------- input: click/tap, swipe, keys, wheel
+  var hover = null, down = null, wheelLock = 0;
+  filmCanvas.addEventListener("pointermove", function (e) {
+    if (e.pointerType !== "mouse") { hover = null; return; }
+    hover = e.clientX < VW * 0.22 ? "prev" : "next";
+  });
+  filmCanvas.addEventListener("pointerleave", function () { hover = null; });
+  filmCanvas.addEventListener("pointerdown", function (e) { down = { x: e.clientX, y: e.clientY }; });
+  filmCanvas.addEventListener("pointerup", function (e) {
+    if (!down) return;
+    var dx = e.clientX - down.x, dy = e.clientY - down.y;
+    down = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { if (dx < 0) next(); else prev(); return; }
+    if (e.clientX < VW * 0.22 && cur > 0) prev(); else next();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains("film-link")) return;
+    if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter" || e.key === "PageDown") { e.preventDefault(); next(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp" || e.key === "Backspace") { e.preventDefault(); prev(); }
+    else if (e.key === "Home") { e.preventDefault(); restart(); }
+  });
+  window.addEventListener("wheel", function (e) {
+    var now = performance.now();
+    if (now < wheelLock || Math.abs(e.deltaY) < 24) return;
+    wheelLock = now + 650;
+    if (e.deltaY > 0) next(); else prev();
+  }, { passive: true });
+  var btnPrev = document.getElementById("film-prev"), btnNext = document.getElementById("film-next");
+  if (btnPrev) btnPrev.addEventListener("click", prev);
+  if (btnNext) btnNext.addEventListener("click", next);
 
-  // Wait (briefly) for the handwriting font so labels aren't drawn in a fallback font first.
+  window.addEventListener("resize", layout);
+  layout();
+
+  // Start where the link points (adthakur.com/#diatometer), or at the title.
+  (function () {
+    var h = (location.hash || "").replace("#", "");
+    h = ALIASES[h] || h;
+    var idx = 0;
+    SHOTS.forEach(function (s, i) { if (s.id === h) idx = i; });
+    var now = performance.now();
+    if (idx > 0 && h === "today") { enterShot(idx, -1, now); return; }
+    enterShot(idx, 1, now);
+  })();
+
   var started = false;
   function begin() { if (!started) { started = true; requestAnimationFrame(frame); } }
   if (document.fonts && document.fonts.load) {
@@ -781,10 +1233,10 @@
     begin();
   }
 
-  // For checking a drawing by hand from the browser console: inkDebug.seek("micro", 8)
-  window.inkDebug = {
-    seek: function (name, t) {
-      views.forEach(function (v) { if (v.canvas.getAttribute("data-scene") === name) v.start = performance.now() - t * 1000; });
-    }
+  // For checking by hand from the browser console: filmDebug.show(8) jumps to a shot, fully drawn.
+  window.filmDebug = {
+    show: function (i) { trans = null; enterShot(i, -1, performance.now()); },
+    go: function (i) { go(i, 1); },
+    next: next, prev: prev
   };
 })();

@@ -4,257 +4,64 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Aditya Bikram Thakur</title>
-  <meta name="description" content="The story so far of Aditya Bikram Thakur: from Pokhara, Nepal, to math and computer science at Washington and Lee, told in chapters and ink drawings.">
+  <meta name="description" content="The story so far of Aditya Bikram Thakur, from Pokhara, Nepal, to math and computer science at Washington and Lee, as a short ink-drawn film.">
   <meta property="og:title" content="Aditya Bikram Thakur">
-  <meta property="og:description" content="From Pokhara, Nepal, to math and computer science at Washington and Lee: the story so far.">
+  <meta property="og:description" content="From Pokhara, Nepal, to math and computer science at Washington and Lee: the story so far, as a short ink-drawn film.">
+  <meta name="theme-color" content="#0e0d0c">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=2026-10-05a">
-  <script>
-    // Apply a saved light/dark choice before the page paints, so it never flashes.
-    try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=2026-10-05b">
+  <noscript>
+    <style>
+      #film { display: none; }
+      html, body { overflow: auto; }
+      #transcript { position: static; width: auto; height: auto; margin: 0 auto; padding: 32px 20px; clip: auto; overflow: visible; white-space: normal; max-width: 640px; }
+    </style>
+  </noscript>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <canvas id="film" tabindex="0" role="img"
+          aria-label="A short ink-drawn film telling my story. Use the arrow keys or the Previous and Next buttons to move through it; each caption is read out as it appears."></canvas>
 
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="wordmark" href="#top">ADITYA</a>
-      <nav class="header-nav" aria-label="Page">
-        <a class="header-link" href="#contact">Contact</a>
-        <button class="theme-btn" type="button" aria-label="Theme: system. Click to change." title="Theme: system">
-          <svg class="icon on" data-mode="system" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
-          <svg class="icon" data-mode="light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg>
-          <svg class="icon" data-mode="dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
-        </button>
-      </nav>
-    </div>
-  </header>
+  <!-- For screen readers: controls, and each caption as it appears. Visually hidden. -->
+  <div class="sr-only">
+    <button type="button" id="film-prev">Previous</button>
+    <button type="button" id="film-next">Next</button>
+  </div>
+  <div class="sr-only" id="film-live" aria-live="polite"></div>
 
-  <div class="pixels pixels--top pixels--static" data-pixels="noise" aria-hidden="true"></div>
+  <!-- The whole story as plain text: for screen readers, search engines, and browsers without JavaScript. -->
+  <article class="sr-only" id="transcript">
+    <h1>Aditya Bikram Thakur</h1>
+    <p>Math and computer science at Washington and Lee.</p>
+    <h2>Pokhara, Nepal</h2>
+    <p>I grew up in Pokhara, Nepal, under Machhapuchhre, the &ldquo;fish tail&rdquo; mountain.</p>
+    <h2>Budhanilkantha School, Kathmandu</h2>
+    <p>A Levels in Physics, Chemistry, Computer Science and Mathematics, with an A* in all four. Valedictorian. 1600 on the SAT.</p>
+    <h2>Summer 2023: Lipi AI</h2>
+    <p>An app that reads Tibetan inscriptions from a phone photo. I built the backend: splitting stacked letters so OCR can read them.</p>
+    <h2>Summer 2024: Nepalingo</h2>
+    <p>An open-source app for learning Nepal&rsquo;s indigenous languages. I built the flashcards, daily quiz and activity cards, and merged 11 pull requests.</p>
+    <h2>2025: learning on my own</h2>
+    <p>The Algorithms and Machine Learning specializations from Stanford, and Harvard&rsquo;s CS50 AI (twelve projects).</p>
+    <h2>Summer 2026: two projects of my own</h2>
+    <p>walden.life: Thoreau&rsquo;s <em>Walden</em>, one day at a time. SATitude: practice for the digital SAT.</p>
+    <h2>August 2026: Lexington, Virginia</h2>
+    <p>About 12,000 km later: Washington and Lee University. A math and computer science double major, on a full-ride scholarship.</p>
+    <h2>September 2026: DiatoMeter</h2>
+    <p>With William &amp; Mary&rsquo;s Nano &amp; Biomaterials Lab: measuring tiny glass algae shells. 136 shells measured in about 15 seconds.</p>
+    <h2>Still building</h2>
+    <p>Say hello:</p>
+    <ul>
+      <li><a href="mailto:thakura30@wlu.edu">Email: thakura30@wlu.edu</a></li>
+      <li><a href="https://github.com/sirElvinn">GitHub</a></li>
+      <li><a href="https://www.linkedin.com/in/aditya-thakur-a76501266/">LinkedIn</a></li>
+      <li><a href="assets/aditya-thakur-resume.pdf">R&eacute;sum&eacute; (PDF)</a></li>
+    </ul>
+  </article>
 
-  <main id="main" class="container">
-    <article class="page story" id="top">
-      <header class="hero">
-        <h1 class="name">
-          Aditya Bikram Thakur
-        <span class="name-links">
-          <a href="https://github.com/sirElvinn" target="_blank" rel="noopener" aria-label="Aditya on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
-          <a href="https://www.linkedin.com/in/aditya-thakur-a76501266/" target="_blank" rel="noopener" aria-label="Aditya on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zM7.119 20.452H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
-        </span>
-        </h1>
-        <p class="hero-sub">Math and computer science at Washington and Lee. This is my story so far.</p>
-        <figure class="figure figure--portrait">
-          <div class="figure-frame figure-frame--auto">
-            <img src="assets/photo.jpg" width="1200" height="1200"
-                 alt="Aditya taking a selfie at night on a lawn, in front of a lit brick building with white columns.">
-          </div>
-        </figure>
-      </header>
-
-      <section class="chapter" id="pokhara" aria-labelledby="pokhara-title">
-        <p class="chapter-meta"><span class="chapter-num">01</span>Where it starts</p>
-        <h2 class="chapter-title" id="pokhara-title">Pokhara, Nepal</h2>
-        <canvas class="ink" data-scene="pokhara" width="960" height="540" role="img" aria-label="Ink drawing: the Annapurna range at night with Machhapuchhre's twin peak, a sun rising, and a boat on the lake."></canvas>
-        <div class="story-text">
-          <p>
-            I grew up in Pokhara, a lake city in central Nepal with the Annapurna range along its northern edge.
-            The mountain everyone notices is Machhapuchhre, the &ldquo;fish tail,&rdquo; named for its split summit.
-            You&rsquo;ll find its outline drawn in a few places on this page.
-          </p>
-        </div>
-      </section>
-
-      <section class="chapter" id="school" aria-labelledby="school-title">
-        <p class="chapter-meta"><span class="chapter-num">02</span>2023 &ndash; 2025</p>
-        <h2 class="chapter-title" id="school-title">Budhanilkantha School</h2>
-        <canvas class="ink" data-scene="library" width="960" height="540" role="img" aria-label="Ink drawing: a long library aisle lined with books, someone reading at the far end, and a cat on the floor."></canvas>
-        <div class="story-text">
-          <p>
-            I finished school at Budhanilkantha School in Kathmandu, where I took A Levels in Physics, Chemistry,
-            Computer Science and Mathematics. I earned an A* in all four, scored 1600 on the SAT, and graduated as
-            valedictorian.
-          </p>
-        </div>
-      </section>
-
-      <section class="chapter" id="lipi-ai" aria-labelledby="lipi-ai-title">
-        <p class="chapter-meta"><span class="chapter-num">03</span>Summer 2023</p>
-        <h2 class="chapter-title" id="lipi-ai-title">Teaching a phone to read stone</h2>
-        <canvas class="ink" data-scene="stone" width="960" height="540" role="img" aria-label="Ink drawing: a carved stone covered in rows of letters, and a phone that boxes each letter and starts translating."></canvas>
-        <div class="story-text">
-          <p>
-            My first real software project was Lipi AI, built with the Student Research Council Nepal. The goal was an
-            app that could read a Tibetan inscription from a phone photo and translate it into English. I worked on the
-            backend.
-          </p>
-          <p>
-            The hard part was the script itself. Tibetan letters stack on top of one another, and ordinary OCR (the
-            software that turns pictures of text into text) expects to split a page into clean lines. I wrote code to
-            separate the stacked letters, adapted Tesseract OCR to Tibetan, and tuned the image cleanup for faded,
-            low-contrast photos. There were six of us students and two mentors, and at the end we presented the working
-            system to linguists.
-          </p>
-        </div>
-      </section>
-
-      <section class="chapter" id="nepalingo" aria-labelledby="nepalingo-title">
-        <p class="chapter-meta"><span class="chapter-num">04</span>Summer 2024</p>
-        <h2 class="chapter-title" id="nepalingo-title">Nepalingo</h2>
-        <figure class="figure">
-          <div class="figure-frame figure-frame--auto figure-frame--shot">
-            <img src="assets/nepalingo-home.jpg" width="1200" height="664" loading="lazy"
-                 alt="Nepalingo's home screen: a greeting, a three-day streak badge, and a Take a quiz card for Nepali vocabulary.">
-          </div>
-          <figcaption>Nepalingo&rsquo;s home screen.</figcaption>
-        </figure>
-        <div class="story-text">
-          <p>
-            The next summer I joined Incubate Nepal as a frontend developer on <a href="https://nepalingo.com" target="_blank" rel="noopener">Nepalingo</a>,
-            an open-source web app for learning Nepal&rsquo;s indigenous languages. I built the flashcards, the daily quiz
-            and the activity cards, with audio playback. We worked in weekly sprints, with our code reviewed by engineers
-            from Vista and Cirkul, and by the end I had merged 11 pull requests, the fourth most of the ten contributors.
-          </p>
-          <p class="links"><a href="https://nepalingo.com" target="_blank" rel="noopener">Visit <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a><a href="https://github.com/nepalcodes/nepalingo" target="_blank" rel="noopener">Source <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></p>
-        </div>
-      </section>
-
-      <section class="chapter" id="courses" aria-labelledby="courses-title">
-        <p class="chapter-meta"><span class="chapter-num">05</span>2025</p>
-        <h2 class="chapter-title" id="courses-title">Learning on my own</h2>
-        <canvas class="ink" data-scene="night" width="960" height="540" role="img" aria-label="Ink drawing: a silhouette at a desk in front of a glowing laptop full of code, a moonlit window, and a steaming mug."></canvas>
-        <div class="story-text">
-          <p>
-            In 2025 I worked through three courses on my own: Stanford&rsquo;s four-course Algorithms specialization,
-            the Machine Learning specialization from DeepLearning.AI and Stanford, and Harvard&rsquo;s CS50 Introduction
-            to AI with Python, which is twelve projects long.
-          </p>
-          <ul class="cert-grid">
-            <li>
-              <a class="cert-card" href="https://coursera.org/verify/specialization/3EANS56UPKJ0" target="_blank" rel="noopener">
-                <img src="assets/cert-algorithms.jpg" width="900" height="696" loading="lazy" alt="Coursera certificate showing Aditya Bikram Thakur completed Stanford's Algorithms Specialization on July 12, 2025.">
-                <span class="cert-name">Algorithms Specialization</span>
-                <span class="cert-meta">Stanford Online &middot; Jul. 2025</span>
-                <span class="cert-verify">Verify <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
-              </a>
-            </li>
-            <li>
-              <a class="cert-card" href="https://coursera.org/verify/specialization/Q4C4SVBK51SB" target="_blank" rel="noopener">
-                <img src="assets/cert-machine-learning.jpg" width="900" height="695" loading="lazy" alt="Coursera certificate showing Aditya Bikram Thakur completed the Machine Learning Specialization from DeepLearning.AI and Stanford on July 24, 2025.">
-                <span class="cert-name">Machine Learning Specialization</span>
-                <span class="cert-meta">DeepLearning.AI &amp; Stanford &middot; Jul. 2025</span>
-                <span class="cert-verify">Verify <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
-              </a>
-            </li>
-            <li>
-              <a class="cert-card" href="https://cs50.harvard.edu/certificates/1f29da05-1c3e-4d82-8301-c2e1e56e03ea" target="_blank" rel="noopener">
-                <img src="assets/cert-cs50-ai.jpg" width="900" height="696" loading="lazy" alt="Harvard CS50 certificate showing Aditya Bikram Thakur completed CS50's Introduction to Artificial Intelligence with Python, including twelve projects, in 2025.">
-                <span class="cert-name">CS50 AI with Python</span>
-                <span class="cert-meta">Harvard University &middot; 2025</span>
-                <span class="cert-verify">Verify <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="chapter" id="summer-builds" aria-labelledby="summer-builds-title">
-        <p class="chapter-meta"><span class="chapter-num">06</span>Summer 2026</p>
-        <h2 class="chapter-title" id="summer-builds-title">Two projects of my own</h2>
-        <figure class="figure">
-          <div class="figure-pair">
-            <div class="figure-frame figure-frame--auto figure-frame--shot">
-              <img src="assets/walden.jpg" width="1440" height="688" loading="lazy"
-                   alt="The opening page of walden.life: the title Walden, a short introduction, a Thoreau quote, and a Begin Day 1 button.">
-            </div>
-            <div class="figure-frame figure-frame--auto figure-frame--shot">
-              <img src="assets/satitude.jpg" width="1440" height="633" loading="lazy"
-                   alt="SATitude's landing page: the headline 'Make your Digital SAT prep feel brilliantly clear' and the site's bird mascot.">
-            </div>
-          </div>
-          <figcaption>walden.life and SATitude.</figcaption>
-        </figure>
-        <div class="story-text">
-          <p>
-            The summer before college I built two projects of my own. The first was <a href="https://walden.life" target="_blank" rel="noopener">walden.life</a>,
-            which turns Thoreau&rsquo;s <em>Walden</em> into something you read one day at a time: 100 sourced daily entries,
-            drawn from 12 of the book&rsquo;s 18 chapters, laid out on a timeline. Sending only the five fields the
-            timeline needs, instead of all ten, cut its first download by 53%.
-          </p>
-          <p>
-            The second was <a href="https://satitude.xyz" target="_blank" rel="noopener">SATitude</a>, a platform for practicing the digital SAT, with a React
-            front end, a TypeScript API, user accounts and a PostgreSQL database.
-          </p>
-          <p class="links"><a href="https://walden.life" target="_blank" rel="noopener">walden.life <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a><a href="https://github.com/sirElvinn/walden-life" target="_blank" rel="noopener">walden.life source <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a><a href="https://satitude.xyz" target="_blank" rel="noopener">SATitude <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></p>
-        </div>
-      </section>
-
-      <section class="chapter" id="lexington" aria-labelledby="lexington-title">
-        <p class="chapter-meta"><span class="chapter-num">07</span>August 2026</p>
-        <h2 class="chapter-title" id="lexington-title">Lexington, Virginia</h2>
-        <canvas class="ink" data-scene="lexington" width="960" height="540" role="img" aria-label="Ink drawing: a plane's dotted path across a night sky, then a columned college building with lit windows and a person on the lawn taking a selfie."></canvas>
-        <div class="story-text">
-          <p>
-            In August 2026 I moved about 12,000 kilometers to Lexington, Virginia, to start at Washington and Lee
-            University on a full-ride scholarship. I&rsquo;m double majoring in mathematics and computer science.
-          </p>
-        </div>
-      </section>
-
-      <section class="chapter" id="diatometer" aria-labelledby="diatometer-title">
-        <p class="chapter-meta"><span class="chapter-num">08</span>September 2026 &ndash; now</p>
-        <h2 class="chapter-title" id="diatometer-title">DiatoMeter</h2>
-        <canvas class="ink" data-scene="micro" width="960" height="540" role="img" aria-label="Ink drawing: a microscope view filled with tiny round shells that get measured one by one while a counter climbs to 136."></canvas>
-        <div class="story-text">
-          <p>
-            A month into college I started working with William &amp; Mary&rsquo;s Nano &amp; Biomaterials Lab on
-            <a href="https://diamometer.us" target="_blank" rel="noopener">DiatoMeter</a>. Diatoms are single-celled algae that build tiny shells out of glass,
-            and the lab studies those shells under a scanning electron microscope. Measuring them meant clicking around
-            each shell, one at a time.
-          </p>
-          <p>
-            DiatoMeter does the whole image at once. It reads the microscope&rsquo;s scale bar, outlines the shells,
-            throws out debris, and measures and grades each one. On one image it found and measured 136 shells in about
-            15 seconds. Its scale reading lands within 0.12% of the microscope&rsquo;s own calibration, and a small model
-            that guesses which sample an image came from was right 77% of the time on imaging sessions it had never seen.
-          </p>
-          <figure class="figure">
-            <div class="figure-frame figure-frame--auto">
-              <img src="assets/diatometer-shells.jpg" width="1280" height="816" loading="lazy"
-                   alt="A grey electron-microscope image of small round algae shells. Eighteen are outlined in green where DiatoMeter found and measured them.">
-            </div>
-            <figcaption>DiatoMeter&rsquo;s unedited output on a 3,000&times; image of <em>Thalassiosira pseudonana</em>. Each green circle is one shell it found and measured.</figcaption>
-          </figure>
-          <p class="links"><a href="https://diamometer.us" target="_blank" rel="noopener">Visit <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a><a href="https://github.com/sirElvinn/diatometer" target="_blank" rel="noopener">Source <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a></p>
-        </div>
-      </section>
-
-      <section class="chapter" id="today" aria-labelledby="today-title">
-        <p class="chapter-meta"><span class="chapter-num">09</span>Today</p>
-        <h2 class="chapter-title" id="today-title">Still building</h2>
-        <canvas class="ink" data-scene="road" width="960" height="540" role="img" aria-label="Ink drawing: a road winding up toward the mountains, someone walking up it, signed 'aditya'."></canvas>
-        <div class="story-text">
-          <p>
-            That brings the story to now: my first year at Washington and Lee, with DiatoMeter still growing.
-            The rest hasn&rsquo;t been written yet. If you&rsquo;d like to talk, here&rsquo;s how to reach me.
-          </p>
-          <ul class="channels" id="contact">
-            <li><a href="mailto:thakura30@wlu.edu"><span class="channel-label">Email</span><span class="channel-value">thakura30@wlu.edu</span></a></li>
-            <li><a href="https://www.linkedin.com/in/aditya-thakur-a76501266/" target="_blank" rel="noopener"><span class="channel-label">LinkedIn</span><span class="channel-value">linkedin.com/in/aditya-thakur-a76501266</span></a></li>
-            <li><a href="https://github.com/sirElvinn" target="_blank" rel="noopener"><span class="channel-label">GitHub</span><span class="channel-value">github.com/sirElvinn</span></a></li>
-            <li><a href="assets/aditya-thakur-resume.pdf" target="_blank" rel="noopener"><span class="channel-label">R&eacute;sum&eacute;</span><span class="channel-value">One page, PDF</span></a></li>
-          </ul>
-        </div>
-      </section>
-
-    </article>
-  </main>
-
-  <script src="site.js?v=2026-10-05a"></script>
-  <script src="pixels.js?v=2026-10-05a"></script>
-  <script src="ink.js?v=2026-10-05a"></script>
+  <script src="film.js?v=2026-10-05b"></script>
 </body>
 </html>
