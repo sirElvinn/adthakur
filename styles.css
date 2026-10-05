@@ -221,6 +221,8 @@ main {
 @media (min-width: 640px) { .name-links svg { width: 30px; height: 30px; } }
 
 .figure { margin-top: 40px; }
+/* The square photo on the About page: small enough that it and its caption fit on a laptop's first screen */
+.figure--portrait { max-width: 520px; }
 .figure-frame {
   position: relative;
   aspect-ratio: 16 / 9;

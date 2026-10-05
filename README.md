@@ -26,8 +26,9 @@ change the menu in each file.
 
 ## Adding your images
 
-- **Your photo:** replace `assets/photo.jpg` (currently a 1400 x 1050 crop, 4:3). If the new photo has a
-  different shape, update the `width` and `height` on its `<img>` in `index.html`, and edit the `Fig. 1.1` caption.
+- **Your photo:** replace `assets/photo.jpg` (currently a 1200 x 1200 square, shown up to 520px wide). Frame it
+  so there's room below your chin; a crop that ends at the chin looks like the head was cut off. If the new photo
+  has a different shape, update the `width` and `height` on its `<img>` in `index.html`, and edit the `Fig. 1.1` caption.
 - **A project image:** copy the `<figure class="figure">` block from the DiatoMeter entry in `projects.html`,
   point it at your new file in `assets/`, and number the caption Fig. 2.2, 2.3, and so on.
 - Keep images under about 500 KB so the pages load fast. On a Mac you can shrink one with
