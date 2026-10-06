@@ -897,7 +897,7 @@
     var F = frustules(), i, m0 = 2.4, mDur = 3.4;
     // a desktop electron microscope on the bench, cabled to the laptop
     var sa = prog(t, 0.2, 0.9);
-    brush(seg(30, 500, 940, 500, 0.6), 2, prog(t, 0.1, 1), { alpha: 0.8 });
+    monitorDesk(708, 446, 500, t, 30, 940);
     fill(rectPts(110, 420, 214, 80, 0.6), INK, 1, { still: true });
     brush(rectPts(110, 420, 214, 80, 0.6), 2.2, sa, { taper: 0.02 });                   // the vacuum chamber
     fill(rectPts(190, 330, 52, 90, 0.4), INK, 1, { still: true });
@@ -1000,18 +1000,31 @@
     stars(90, 0, 0, W, 390, t, 0);
     fill(circlePts(800, 110, 26, 0.4), PAPER, prog(t, 0.4, 0.6));
     fill(circlePts(812, 102, 24, 0.4), INK, prog(t, 0.4, 0.6));
-    brush(path([[0, 422], [120, 404], [260, 414], [380, 398], [520, 412], [640, 400], [800, 414], [960, 404]], 0.8), 2.2, prog(t, 0.3, 1.6), {});
+    // far away, under the moon: the Annapurna range with Machhapuchhre, where the story starts
+    function far(p) { return [170 + p[0] * 0.64, 412 + (p[1] - 270) * 0.6]; }
+    var fr = prog(t, 0.5, 1.6), range = [far([-80, 340])].concat(ANNAPURNA.map(far), [far([1040, 340])]);
+    fill(range.concat([far([1040, 400]), far([-80, 400])]), INK, 1, { still: true });   // solid, so stars don't shine through
+    fill(range.concat([far([1040, 400]), far([-80, 400])]), PAPER, fr * 0.16, { still: true });
+    brush(path(range, 0.4), 1.4, fr, { alpha: 0.5 });
+    fill(MACHHA.map(far), INK, 1, { still: true });
+    fill(MACHHA.map(far), PAPER, fr * 0.3, { still: true });
+    brush(path(MACHHA.map(far), 0.4), 1.6, fr, { alpha: 0.7 });
+    var HILL = [[0, 422], [120, 404], [260, 414], [380, 398], [520, 412], [640, 400], [800, 414], [960, 404]];
+    fill(HILL.concat([[960, 540], [0, 540]]), INK, 1, { still: true });
+    brush(path(HILL, 0.8), 2.2, prog(t, 0.3, 1.6), {});
     for (var g = 0; g < 46; g++) {
       var gx = R() * W, gy = 432 + R() * 100, gl = 4 + (gy - 430) * 0.06;
       brush(seg(gx, gy, gx + 2, gy - gl, 0.2), 1.4, prog(t, 1.2 + R() * 1.2, 0.2), { alpha: 0.6 });
     }
-    // me, standing on the hill, looking up
-    var fa = prog(t, 1.0, 0.6), fx = 480, fy = 408;
-    fill(circlePts(fx, fy - 48, 8.5, 0.3), PAPER, fa);
-    fill(closed([[fx - 9, fy - 37], [fx + 9, fy - 37], [fx + 11, fy - 14], [fx - 11, fy - 14]], 0.3), PAPER, fa);
-    fill(rectPts(fx + 8, fy - 35, 8, 17, 0.2), PAPER, fa);
-    brush(seg(fx - 5, fy - 14, fx - 6, fy + 2, 0.2), 3.6, fa, {});
-    brush(seg(fx + 5, fy - 14, fx + 6, fy + 2, 0.2), 3.6, fa, {});
+    // me, standing on the hill with a backpack, looking out at them
+    var fa = prog(t, 1.0, 0.6), fx = 440, fy = 410, k = 1.25;
+    fill(circlePts(fx, fy - 48 * k, 8.5 * k, 0.3), PAPER, fa);
+    fill(closed([[fx - 9 * k, fy - 37 * k], [fx + 9 * k, fy - 37 * k], [fx + 11 * k, fy - 14 * k], [fx - 11 * k, fy - 14 * k]], 0.3), PAPER, fa);
+    brush(rectPts(fx - 7 * k, fy - 33 * k, 14 * k, 15 * k, 0.2), 1.6, fa, { color: INK, taper: 0.05 });   // the backpack, seen from behind
+    brush(seg(fx - 4 * k, fy - 37 * k, fx - 4 * k, fy - 33 * k, 0.1), 1.2, fa, { color: INK, taper: 0 });
+    brush(seg(fx + 4 * k, fy - 37 * k, fx + 4 * k, fy - 33 * k, 0.1), 1.2, fa, { color: INK, taper: 0 });
+    brush(seg(fx - 5 * k, fy - 14 * k, fx - 6 * k, fy + 2, 0.2), 3.6 * k, fa, {});
+    brush(seg(fx + 5 * k, fy - 14 * k, fx + 6 * k, fy + 2, 0.2), 3.6 * k, fa, {});
     // a shooting star every few seconds (last: it moves)
     var sp = ((t + 2) % 7) / 7, u = Math.min(1, sp / 0.18);
     var sx = lerp(560, 820, u), sy = lerp(70, 170, u);
@@ -1099,7 +1112,10 @@
     hand("Nepal", 498, 64, 22, PAPER, "left", wa);
     hand("ingo", 498 + ctx.measureText("Nepal").width, 64, 22, N_RED, "left", wa);
     brush(rectPts(852, 48, 66, 20, 0.3), 1.2, wa, { taper: 0.03, alpha: 0.7 });
-    hand("newari ▾", 860, 63, 13, PAPER, "left", wa * 0.85);
+    var CARDS = [["do", "याये", "newari"], ["my", "हमर", "maithili"]];
+    var cyc = 6, cu = reduceMotion ? 3 : Math.max(0, t - 0.8), ci = Math.floor(cu / cyc) % CARDS.length, cp = cu % cyc;
+    var C = CARDS[ci], Cnext = CARDS[(ci + 1) % CARDS.length];
+    hand((cp > 5.5 ? Cnext : C)[2] + " ▾", 860, 63, 13, PAPER, "left", wa * 0.85);
 
     // greeting and the streak badge
     var ga = prog(t, 0.6, 0.4);
@@ -1159,20 +1175,23 @@
     var fk = reduceMotion ? 0 : Math.sin(t * 7) * 1.5;
     fill([[908 + fk, 91], [914, 98], [915, 105], [908, 110], [901, 105], [903, 97]], "#ffd27a", ga);
 
-    // the flashcard flips over (its width changes, so it comes last and uses no randomness)
-    var fp = prog(t, 3.2, 0.6), sx = Math.abs(Math.cos(fp * Math.PI)), showBack = fp > 0.5;
+    // the flashcard flips to its meaning, then over to the next card (its width changes, so it comes last
+    // and uses no randomness)
+    var f1 = reduceMotion ? 1 : prog(cp, 2.4, 0.6), f2 = reduceMotion ? 0 : prog(cp, 5.2, 0.6);
+    var fp = f2 > 0 ? f2 : f1, sx = Math.abs(Math.cos(fp * Math.PI));
+    var showBack = f2 > 0 ? f2 < 0.5 : f1 > 0.5, face = f2 >= 0.5 ? Cnext : C;
     var fw = 140 * Math.max(0.04, sx), ca = prog(t, 0.8, 0.4), inside = ca * (sx > 0.55 ? 1 : 0);
     var card = rectLine(580 - fw / 2, 122, fw, 196, 8);
     if (!showBack) {
       fill(card, N_BLUE, ca);
-      hand("do", 580, 232, 40, PAPER, "center", inside);
+      hand(face[0], 580, 232, 40, PAPER, "center", inside);
     } else {
       fill(card, PAPER, ca);
       fill(rectLine(580 - fw / 2, 122, fw, 64, 8), N_BLUE, ca);
-      hand("do", 580, 156, 26, PAPER, "center", inside);
-      hand("याये", 580, 178, 15, PAPER, "center", inside);
-      hand("newari: याये", 580, 236, 15, INK, "center", inside);
-      hand("english: do", 580, 258, 15, INK, "center", inside);
+      hand(face[0], 580, 156, 26, PAPER, "center", inside);
+      hand(face[1], 580, 178, 15, PAPER, "center", inside);
+      hand(face[2] + ": " + face[1], 580, 236, 15, INK, "center", inside);
+      hand("english: " + face[0], 580, 258, 15, INK, "center", inside);
     }
     brush(card, 1.6, prog(t, 0.8, 0.6), { taper: 0.02, alpha: 0.6 });
   }
@@ -1248,12 +1267,11 @@
     fill(rectPts(484, 62, 448, 364, 0.3), "#f7f4ec", wa, { still: true });
     brush(rectPts(480, 36, 456, 394, 0.8), 2, wa, { taper: 0.02 });
     for (i = 0; i < 3; i++) fill(circlePts(496 + i * 13, 49, 3.6, 0.1), PAPER, wa * 0.7);
-    var dayLen = 2.6, start = 2.4, d = 0, ca = prog(t, 1.0, 0.5);
-    if (!reduceMotion && t > start) {
-      d = Math.min(2, Math.floor((t - start) / dayLen));
-      var dt = t - start - d * dayLen;
-      ca = d === 0 ? 1 : clamp01(dt / 0.4);
-      if (d < 2) ca *= clamp01((dayLen - dt) / 0.3);
+    var dayLen = 2.8, start = 2.4, d = 0, ca = prog(t, 1.0, 0.5);
+    if (!reduceMotion && t > start) {                               // the days keep turning, one at a time
+      var n = Math.floor((t - start) / dayLen), dt = t - start - n * dayLen;
+      d = n % WALDEN_DAYS.length;
+      ca = clamp01(dt / 0.4) * clamp01((dayLen - dt) / 0.3);
     }
     var D = WALDEN_DAYS[d];
     hand("← all days", 506, 86, 13, W_GREY, "left", wa);
@@ -1529,6 +1547,12 @@
     fill(circlePts(860, 80, 20, 0.4), PAPER, prog(t, 0.3, 0.6));
     fill(circlePts(870, 74, 18, 0.4), INK, prog(t, 0.3, 0.6));
     brush(path([[0, 470], [160, 452], [330, 462], [520, 446], [700, 458], [860, 448], [960, 456]], 0.8), 2, prog(t, 0.2, 1.2), { alpha: 0.7 });
+    // the traveler from the opening, sitting on the hill, looking up
+    var fa = prog(t, 0.8, 0.6), fx = 800, fy = 448;
+    fill(circlePts(fx, fy - 40, 8, 0.3), PAPER, fa);
+    fill(closed([[fx - 9, fy - 31], [fx + 8, fy - 31], [fx + 11, fy - 8], [fx - 11, fy - 8]], 0.3), PAPER, fa);
+    brush(path([[fx - 8, fy - 8], [fx - 22, fy - 4], [fx - 26, fy + 4]], 0.2), 4, fa, {});
+    brush(path([[fx + 2, fy - 8], [fx - 14, fy - 2], [fx - 16, fy + 4]], 0.2), 4, fa, {});
   }
 
   // ---------------------------------------------------------------- the film: shots and their words
@@ -1692,7 +1716,7 @@
     if (fh > maxH) { fh = maxH; fw = (fh * 16) / 9; }
     film.w = fw; film.h = fh;
     film.x = (VW - fw) / 2;
-    film.y = portrait ? Math.max(20, Math.min(VH * 0.2, VH - fh - 330)) : Math.max(m, (VH - fh) / 2 - 12);
+    film.y = portrait ? Math.max(16, Math.min(VH * 0.08, VH - fh - 330)) : Math.max(m, (VH - fh) / 2 - 12);
     [bufA, bufB].forEach(function (b) { b.width = Math.max(1, Math.round(fw * dpr)); b.height = Math.max(1, Math.round(fh * dpr)); });
     capSize = portrait ? Math.max(16, Math.min(21, VW * 0.048)) : Math.max(15, Math.min(28, fw * 0.022));
     vignette = main.createRadialGradient(film.x + fw / 2, film.y + fh / 2, fh * 0.42, film.x + fw / 2, film.y + fh / 2, fw * 0.66);
@@ -1714,6 +1738,7 @@
   // ---------------------------------------------------------------- state
   var track = "main", pos = 0, shot = SHOT.title, beat = 0, shotStart = 0, lineStarts = [], trans = null;
   var TYPE_CPS = 45, CAPTION_DELAY = 650, GROW_MS = 320;
+  var OG = /[?&]og\b/.test(location.search);   // a still for the link-preview image (assets/og.png)
 
   function typeDelay(k) { return shot.sep[k] ? GROW_MS : 0; }
   function typedDone(k, now) {
@@ -1739,7 +1764,8 @@
         lineStarts.push(now + delay);
       }
     }
-    try { history.replaceState(null, "", shot.id === "title" ? location.pathname : "#" + shot.id); } catch (e) {}
+    if (OG && shot.id === "title") { beat = 2; lineStarts = lineStarts.slice(0, 2); }
+    try { history.replaceState(null, "", shot.id === "title" ? location.pathname + location.search : "#" + shot.id); } catch (e) {}
     announce();
   }
 
@@ -2004,7 +2030,7 @@
 
     var list = TRACKS[track], n = list.length, gapD = 14;
     var dy = portrait ? VH - 26 : film.y + film.h + 22, x0 = VW / 2 - ((n - 1) * gapD) / 2;
-    var dots = n > 1 && !SHOT[list[0]].items;
+    var dots = n > 1 && !SHOT[list[0]].items && !OG;
     for (var i = 0; i < n && dots; i++) {
       main.beginPath();
       main.arc(x0 + i * gapD, dy, i === pos ? 3.6 : 2.6, 0, Math.PI * 2);
@@ -2015,17 +2041,20 @@
     main.globalAlpha = 1;
 
     var atChoices = (shot.id === MENU || !!shot.items) && beat >= shot.lines.length;
-    var showNext = !atChoices && ((hover === "next") || (shot.id === "title" && !reduceMotion));
+    // once a shot has finished writing and a moment has passed, a faint arrow says there's more
+    var lastK = shot.lines.length - 1;
+    var settled = !trans && beat >= shot.lines.length && now - lineStarts[lastK] > typeDelay(lastK) + (shot.lines[lastK].length / TYPE_CPS) * 1000 + 2200;
+    var showNext = !atChoices && !OG && ((hover === "next") || (shot.id === "title" && !reduceMotion) || settled);
     var canBack = pos > 0 || track !== "main";
     var showPrev = hover === "prev" && canBack;
     var cy = film.y + film.h / 2, sz = Math.max(12, capSize * 0.7);
     if (showNext) {
-      var pulse = shot.id === "title" && hover !== "next" ? 0.35 + 0.35 * Math.sin(now / 400) : 0.75;
-      var ax = film.x + film.w - sz * 1.6;
+      var pulse = hover === "next" ? 0.75 : reduceMotion ? 0.5 : shot.id === "title" ? 0.35 + 0.35 * Math.sin(now / 400) : 0.3 + 0.25 * Math.sin(now / 500);
+      var ax = film.x >= sz * 2.6 ? film.x + film.w + film.x / 2 : film.x + film.w - sz * 1.6;
       brush(path([[ax - sz * 0.4, cy - sz], [ax + sz * 0.5, cy], [ax - sz * 0.4, cy + sz]], 0.3), 3, 1, { alpha: Math.max(0, pulse), taper: 0.3 });
     }
     if (showPrev) {
-      var bx = film.x + sz * 1.6;
+      var bx = film.x >= sz * 2.6 ? film.x / 2 : film.x + sz * 1.6;
       brush(path([[bx + sz * 0.4, cy - sz], [bx - sz * 0.5, cy], [bx + sz * 0.4, cy + sz]], 0.3), 3, 1, { alpha: 0.75, taper: 0.3 });
     }
   }

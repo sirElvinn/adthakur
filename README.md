@@ -82,3 +82,5 @@ Deployments** lists every version, and any earlier one can be put back with one 
 ## Keeping it up to date
 
 - New résumé: replace `assets/aditya-thakur-resume.pdf` with the new PDF, keeping the same file name.
+- Link preview: `assets/og.jpg` is the image shown when someone shares adthakur.com. It's a still of the opening
+  shot: open `/?og` at 1200×630 (it shows just the name and the line under it) and save a screenshot over it.
