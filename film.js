@@ -1041,7 +1041,7 @@
   function sCards(t) {
     var i;
     // the mascot: Nepalingo's bird, drawn after the app's own artwork (coordinates are in that image's pixels)
-    var ba = prog(t, 0.3, 0.8), ms = 0.16, mox = 410, moy = 470;
+    var ba = prog(t, 0.3, 0.8), ms = 0.18, mox = 330, moy = 486;
     function M(x, y) { return [mox + (x - 790) * ms, moy + (y - 1273) * ms]; }
     function Mc(x, y, r) { var c = M(x, y); return circlePts(c[0], c[1], r * ms, 0.1); }
     function capsule(x1, y1, x2, y2, w) {   // a rounded bar, in image pixels
@@ -1066,7 +1066,6 @@
     }
     var CRIMSON = "#b33640", BLACK = "#1b1b1b";
     fill(blob, "#f7d7e5", ba);
-    fill(rectPts(300, 470, 240, 14, 0.1), INK, 1, { still: true });   // the desk cuts the blob off flat
     fill(capsule(752, 1030, 757, 1190, 64), CRIMSON, ba);              // legs
     fill(capsule(882, 980, 886, 1132, 64), CRIMSON, ba);
     fill(capsule(744, 1254, 838, 1254, 40), BLACK, ba);               // feet
@@ -1091,7 +1090,7 @@
     });
 
     // the app window, on a monitor stand on the desk
-    monitorDesk(708, 440, 470, t, 60, 940);
+    monitorDesk(708, 440, 486, t, 60, 940);
     var wa = prog(t, 0.1, 0.8);
     fill(rectPts(480, 36, 456, 404, 0.6), "#171614", wa, { still: true });
     brush(rectPts(480, 36, 456, 404, 0.8), 2, wa, { taper: 0.02 });
@@ -1141,11 +1140,11 @@
     });
 
     // eleven merged pull requests
-    brush(seg(500, 518, 920, 518, 0.4), 2, prog(t, 2.8, 1.2), {});
+    brush(seg(500, 526, 920, 526, 0.4), 2, prog(t, 2.8, 1.2), {});
     for (var m = 0; m < 11; m++) {
       var mx = 516 + m * 38, mp = prog(t, 3.0 + m * 0.12, 0.25);
-      brush(path([[mx - 22, 496], [mx - 8, 499], [mx, 514]], 0.2), 1.6, mp, { alpha: 0.8 });
-      fill(circlePts(mx, 518, 4.5, 0.2), PAPER, mp);
+      brush(path([[mx - 20, 507], [mx - 7, 510], [mx, 522]], 0.2), 1.6, mp, { alpha: 0.8 });
+      fill(circlePts(mx, 526, 4.5, 0.2), PAPER, mp);
     }
 
     // the flashcard's buttons: don't know / show / know it
