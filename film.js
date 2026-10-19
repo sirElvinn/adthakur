@@ -1667,7 +1667,7 @@
   // "enter" is the camera move used to arrive at a shot in the main story.
   var SHOT = {
     title: { draw: sTitle, seed: 101, anchor: "tc", auto: true,
-      lines: ["aditya bikram thakur.", "math + cs at washington and lee.", "click, tap or press → to begin."] },
+      lines: ["aditya bikram thakur.", "math + cs at washington and lee."] },
     pokhara: { draw: sPokhara, seed: 11, anchor: "tl", enter: "wipe",
       lines: ["i grew up in pokhara, nepal.", "under machhapuchhre, the “fish tail” mountain."] },
     school: { draw: sSchool, seed: 22, anchor: "tc", enter: "pan",
@@ -1845,10 +1845,12 @@
     vignette.addColorStop(1, "rgba(0,0,0,0.5)");
   }
 
-  function renderScene(s, t, bctx, bw) {
+  function renderScene(s, t, bctx, bw, push) {
     ctx = bctx;
-    var k = bw / W;
-    ctx.setTransform(k, 0, 0, k, 0, 0);
+    // push: the camera drifts slowly in on the shot (3% over 16 s), centred
+    var z = push && !reduceMotion && !OG ? 1 + 0.03 * easeInOut(clamp01(t / 16)) : 1;
+    var k = (bw / W) * z, off = (z - 1) / 2;
+    ctx.setTransform(k, 0, 0, k, -off * bw, -off * bw * (H / W));
     ctx.globalAlpha = 1;
     ctx.fillStyle = INK;
     ctx.fillRect(0, 0, W, H);
@@ -1859,7 +1861,11 @@
   // ---------------------------------------------------------------- state
   var track = "main", pos = 0, shot = SHOT.title, beat = 0, shotStart = 0, lineStarts = [], trans = null;
   var TYPE_CPS = 45, CAPTION_DELAY = 650, GROW_MS = 320;
-  var OG = /[?&]og\b/.test(location.search);   // a still for the link-preview image (assets/og.png)
+  var OG = /[?&]og\b/.test(location.search);   // a still for the link-preview image (assets/og.jpg)
+  // The film plays by itself, like a short film: captions type, hold long enough to read, and the camera moves on.
+  // It waits only where the viewer chooses (the choices at the end, and each section's gallery).
+  // ?still turns autoplay off (for screenshots).
+  var AUTO = !OG && !/[?&]still\b/.test(location.search), paused = false, lastAct = 0;
 
   function typeDelay(k) { return shot.sep[k] ? GROW_MS : 0; }
   function typedDone(k, now) {
@@ -1904,8 +1910,9 @@
   function backToChoices(dir) { go("main", TRACKS.main.indexOf(MENU), dir, "wipe", true); }
   function restart() { trans = null; go("main", 0, 1, "wipe", false); }
 
-  function next() {
+  function next(auto) {
     var now = performance.now();
+    if (!auto) lastAct = now;
     if (trans) { trans = null; return; }
     var typing = false;
     for (var k = 0; k < beat; k++) {
@@ -1914,7 +1921,10 @@
     if (typing) { announce(); return; }
     if (beat < shot.lines.length) { lineStarts[beat] = now; beat++; announce(); return; }
     if (shot.items) return;              // a gallery waits for a pick
-    if (inItem()) { backToGallery(-1); return; }
+    if (inItem()) {                      // a section's stories play one after another, then it's back to the gallery
+      if (pos < TRACKS[track].length - 1) go(track, pos + 1, 1, "pan", false); else backToGallery(-1);
+      return;
+    }
     var list = TRACKS[track];
     if (pos < list.length - 1) {
       var nextShot = SHOT[list[pos + 1]];
@@ -1926,11 +1936,28 @@
   }
 
   function prev() {
+    lastAct = performance.now();
     if (trans) trans = null;
     if (!shot.auto && beat > 1) { beat--; announce(); return; }
-    if (inItem()) { backToGallery(-1); return; }
+    if (inItem()) { if (pos > 1) go(track, pos - 1, -1, "pan", true); else backToGallery(-1); return; }
     if (pos > 0) { go(track, pos - 1, -1, track === "main" ? shot.enter : "pan", true); return; }
     if (track !== "main") backToChoices(-1);
+  }
+
+  // ---------------------------------------------------------------- autoplay
+  function waiting() { return beat >= shot.lines.length && (shot.id === MENU || !!shot.items); }
+  function autoStep(now) {
+    if (!beat || waiting() || hotKey) return;   // never move on while the pointer rests on a link or button
+    var k = beat - 1, len = shot.lines[k].length;
+    var doneAt = lineStarts[k] + typeDelay(k) + (len / TYPE_CPS) * 1000;
+    var hold = 700 + len * 26;                       // long enough to read it
+    if (beat >= shot.lines.length) hold += 1200 + (shot.links ? 4500 : 0);   // a last look, and time to click a link
+    if (now >= Math.max(doneAt, lastAct) + hold) next(true);
+  }
+  function togglePause() {
+    paused = !paused;
+    lastAct = performance.now();
+    if (live) live.textContent = paused ? "Paused." : "Playing.";
   }
 
   // ---------------------------------------------------------------- captions and boxes (drawn in screen space, so they stay readable)
@@ -2249,11 +2276,11 @@
     main.fillRect(0, 0, VW, VH);
 
     var tCur = reduceMotion ? 60 : (now - shotStart) / 1000;
-    renderScene(shot, tCur, bctxA, bufA.width);
+    renderScene(shot, tCur, bctxA, bufA.width, true);
     var fade = 1;
     if (trans) {
       var p = clamp01((now - trans.start) / trans.dur), e = easeInOut(p);
-      renderScene(trans.fromShot, (now - trans.fromStart) / 1000, bctxB, bufB.width);
+      renderScene(trans.fromShot, (now - trans.fromStart) / 1000, bctxB, bufB.width, true);
       main.setTransform(dpr, 0, 0, dpr, 0, 0);
       compose(e);
       fade = e;
@@ -2264,7 +2291,26 @@
     }
     drawFilmChrome(now);
     drawCaptions(now, fade);
+    drawPauseButton();
     placeHits();
+    if (AUTO && !paused && !trans) autoStep(now);
+  }
+
+  // a small pause / play button at the bottom right
+  function drawPauseButton() {
+    if (!AUTO || waiting()) return;
+    var s = Math.max(10, capSize * 0.5), x = portrait ? VW - 30 : film.x + film.w - s * 1.2, y = portrait ? VH - 26 : film.y + film.h + 22;
+    var a = hotKey === "chrome:pause" ? 0.95 : 0.55;
+    ctx = main;
+    main.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sid = 71000; R = mulberry32(77);
+    if (paused) {
+      fill(closed([[x - s * 0.45, y - s * 0.6], [x + s * 0.6, y], [x - s * 0.45, y + s * 0.6]], 0.2), PAPER, a);
+    } else {
+      brush(seg(x - s * 0.3, y - s * 0.55, x - s * 0.3, y + s * 0.55, 0.1), s * 0.32, 1, { alpha: a, taper: 0.05 });
+      brush(seg(x + s * 0.3, y - s * 0.55, x + s * 0.3, y + s * 0.55, 0.1), s * 0.32, 1, { alpha: a, taper: 0.05 });
+    }
+    hits.push({ key: "chrome:pause", kind: "pause", item: { aria: paused ? "Play the film" : "Pause the film" }, x: x - s * 1.4, y: y - s * 1.4, w: s * 2.8, h: s * 2.8 });
   }
 
   // ---------------------------------------------------------------- real buttons and links over the drawn boxes (clickable, keyboard-reachable)
@@ -2272,12 +2318,13 @@
   function hitEl(h) {
     if (hitEls[h.key]) return hitEls[h.key];
     var el, it = h.item;
-    if (h.kind === "choice" || h.kind === "item" || it.restart) {
+    if (h.kind === "choice" || h.kind === "item" || h.kind === "pause" || it.restart) {
       el = document.createElement("button");
       el.type = "button";
       el.addEventListener("click", function (ev) {
         ev.stopPropagation();
-        if (it.restart) restart(); else if (h.kind === "item") openItem(it.id); else startTrack(it.track);
+        if (h.kind === "pause") togglePause();
+        else if (it.restart) restart(); else if (h.kind === "item") openItem(it.id); else startTrack(it.track);
         filmCanvas.focus();
       });
     } else {
@@ -2299,6 +2346,7 @@
       var el = hitEl(h);
       shown[h.key] = true;
       el.hidden = false;
+      if (h.kind === "pause" && el.getAttribute("aria-label") !== h.item.aria) el.setAttribute("aria-label", h.item.aria);
       el.style.left = h.x + "px"; el.style.top = h.y + "px";
       el.style.width = h.w + "px"; el.style.height = h.h + "px";
     });
@@ -2335,7 +2383,8 @@
   });
   document.addEventListener("keydown", function (e) {
     if (e.target && e.target.classList && e.target.classList.contains("film-link")) return;
-    if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter" || e.key === "PageDown") { e.preventDefault(); next(); }
+    if ((e.key === " " || e.key === "k") && AUTO) { e.preventDefault(); togglePause(); }
+    else if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter" || e.key === "PageDown") { e.preventDefault(); next(); }
     else if (e.key === "ArrowLeft" || e.key === "PageUp" || e.key === "Backspace") { e.preventDefault(); prev(); }
     else if (e.key === "Home") { e.preventDefault(); restart(); }
     else if (e.key === "Escape" && inItem()) { e.preventDefault(); backToGallery(-1); }
@@ -2349,7 +2398,7 @@
   }, { passive: true });
   var btnPrev = document.getElementById("film-prev"), btnNext = document.getElementById("film-next");
   if (btnPrev) btnPrev.addEventListener("click", prev);
-  if (btnNext) btnNext.addEventListener("click", next);
+  if (btnNext) btnNext.addEventListener("click", function () { next(); });
 
   window.addEventListener("resize", layout);
   layout();

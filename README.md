@@ -1,9 +1,8 @@
 # adthakur: the story so far, as a film
 
 adthakur.com is one full screen: a short film, drawn live in the browser with JavaScript "brush strokes"
-(no images, no video). The viewer drives it. A click, tap, swipe or the arrow keys reveal the next caption,
-and after a shot's last caption the camera moves to the next shot. All words appear only in the
-handwritten caption boxes.
+(no video). It plays by itself, like a short film: each caption types out, holds long enough to read, and the
+camera drifts slowly in, then moves on to the next shot. All words appear only in the handwritten caption boxes.
 
 The main story is just my life: Pokhara, Budhanilkantha School, moving to Lexington for Washington and Lee.
 It ends on "still building." and a choice: **projects**, **experience**, **words I live by** (two quotes that give
@@ -44,10 +43,15 @@ https://adthakur.com/#projects.
 
 ## Controls
 
-- Next: click or tap (anywhere but the left edge), swipe left, or press → / Space / Enter.
+The film plays itself and only waits where the viewer chooses: the choices at the end, and each section's
+gallery. Picking a story in a gallery plays it and the rest of that section, then returns to the gallery.
+
+- Pause / play: Space (or K), or the small button at the bottom right.
+- Skip ahead: click or tap (anywhere but the left edge), swipe left, or press → / Enter.
 - Back: click the left edge, swipe right, or press ←.
-- Back to the gallery from inside a story, or to the choices from a gallery: Escape (or ← at the start).
+- Back to the gallery from a story, or to the choices from a gallery: Escape (or ← at the start).
 - Start over: Home, or the "watch again" box at the end.
+- Add `?still` to the address to turn autoplay off (handy for screenshots).
 
 ## See it on your own computer
 
