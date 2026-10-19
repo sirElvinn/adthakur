@@ -977,17 +977,17 @@
 
   // ---------------------------------------------------------------- scene 7: the road on
   function sEnd(t) {
-    stars(50, 0, 0, W, 230, t, 0);
-    var ridge = RIDGE.map(function (p) { return [350 + p[0] * 0.47, 190 + p[1] * 0.55]; });
-    fill(path(ridge, 0.6).concat([[914, 292], [350, 292]]), INK, 1, { still: true });
-    brush(path(ridge, 0.6), 2.4, prog(t, 0.2, 1.8), {});
-    snow(ridge, t, 1.2, 0.6, 236);
-    brush(seg(0, 292, W, 292, 0.6), 1.6, prog(t, 0.3, 1.2), { alpha: 0.8 });
+    stars(50, 0, 0, W, 260, t, 0);
+    var ridge = RIDGE.map(function (p) { return [560 + p[0] * 0.32, 272 + p[1] * 0.53]; });
+    fill(path(ridge, 0.6).concat([[944, 340], [560, 340]]), INK, 1, { still: true });
+    brush(path(ridge, 0.6), 2.2, prog(t, 0.2, 1.8), {});
+    snow(ridge, t, 1.2, 0.45, 310);
+    brush(seg(0, 340, W, 340, 0.6), 1.6, prog(t, 0.3, 1.2), { alpha: 0.8 });
 
-    var roadPts = path([[620, 560], [580, 500], [670, 440], [605, 380], [655, 330], [628, 292]], 1.2);
+    var roadPts = path([[700, 560], [650, 500], [745, 450], [690, 400], [738, 364], [722, 340]], 1.2);
     brush(roadPts, 30, prog(t, 0.6, 2.4), { noStartTaper: true, taper: 0.9 });
     for (var g = 0; g < 40; g++) {
-      var gx = R() * W, gy = 320 + R() * 220, gl = 4 + (gy - 300) * 0.05;
+      var gx = R() * W, gy = 362 + R() * 178, gl = 4 + (gy - 340) * 0.05;
       brush(seg(gx, gy, gx + 2, gy - gl, 0.2), 1.4, prog(t, 1.4 + R() * 1.4, 0.2), { alpha: 0.6 });
     }
 
@@ -1541,6 +1541,112 @@
     penguin(530, 380, 1.1, t, pa, flap * trying, hop);
   }
 
+  // ---------------------------------------------------------------- photos, inked
+  // A photo is turned into the film's ink once, when it loads: bright areas become paper-coloured washes in a
+  // few flat tones, mid-tones get diagonal hatching, and outlines become paper lines in the dark and dark lines
+  // in the light, broken up a little like dry brush. To add a photo, see the README.
+  var PHOTOS = {}, photoVersion = 0;
+  function inkPhoto(src) {
+    var P = PHOTOS[src];
+    if (!P) {
+      var img = new Image();
+      P = PHOTOS[src] = { ink: null, img: img };   // keep the image referenced until it has loaded
+      img.onload = function () { try { P.ink = inkify(img); photoVersion++; } catch (e) {} };
+      img.src = src;
+    }
+    return P.ink;
+  }
+  function inkify(img) {
+    var w = Math.min(900, img.naturalWidth), h = Math.round((w * img.naturalHeight) / img.naturalWidth);
+    var c = document.createElement("canvas"); c.width = w; c.height = h;
+    var g = c.getContext("2d");
+    g.drawImage(img, 0, 0, w, h);
+    var px = g.getImageData(0, 0, w, h), d = px.data, n = w * h, i, x, y;
+    var L = new Float32Array(n);
+    for (i = 0; i < n; i++) L[i] = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
+    // stretch the contrast between the 3rd and 97th percentiles
+    var hist = new Uint32Array(256);
+    for (i = 0; i < n; i++) hist[Math.min(255, (L[i] * 255) | 0)]++;
+    var lo = 0, hi = 255, acc = 0;
+    for (i = 0; i < 256; i++) { acc += hist[i]; if (acc > n * 0.03) { lo = i; break; } }
+    acc = 0;
+    for (i = 255; i >= 0; i--) { acc += hist[i]; if (acc > n * 0.03) { hi = i; break; } }
+    for (i = 0; i < n; i++) L[i] = clamp01((L[i] * 255 - lo) / Math.max(1, hi - lo));
+    function blur(src, r) {   // a box blur, horizontally then vertically
+      var tmp = new Float32Array(n), out = new Float32Array(n), k, s;
+      for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+        s = 0; for (k = -r; k <= r; k++) s += src[y * w + Math.min(w - 1, Math.max(0, x + k))];
+        tmp[y * w + x] = s / (2 * r + 1);
+      }
+      for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+        s = 0; for (k = -r; k <= r; k++) s += tmp[Math.min(h - 1, Math.max(0, y + k)) * w + x];
+        out[y * w + x] = s / (2 * r + 1);
+      }
+      return out;
+    }
+    var E = blur(L, 2), T = blur(L, 3), G = new Float32Array(n), gs = [];
+    for (y = 1; y < h - 1; y++) for (x = 1; x < w - 1; x++) {
+      var a = E[(y - 1) * w + x - 1], b = E[(y - 1) * w + x], cc = E[(y - 1) * w + x + 1];
+      var dd = E[y * w + x - 1], ff = E[y * w + x + 1];
+      var gg = E[(y + 1) * w + x - 1], hh = E[(y + 1) * w + x], ii = E[(y + 1) * w + x + 1];
+      var gx = cc + 2 * ff + ii - a - 2 * dd - gg, gy = gg + 2 * hh + ii - a - 2 * b - cc;
+      G[y * w + x] = Math.sqrt(gx * gx + gy * gy);
+      if ((x * 7 + y * 13) % 29 === 0) gs.push(G[y * w + x]);
+    }
+    gs.sort(function (p, q) { return p - q; });
+    var g90 = gs[Math.floor(gs.length * 0.9)] || 1;
+    function step(v, e0, e1) { var u = clamp01((v - e0) / (e1 - e0)); return u * u * (3 - 2 * u); }
+    var out = g.createImageData(w, h), o = out.data;
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) {
+      i = y * w + x;
+      var tv = T[i];
+      var tone = 0.12 * step(tv, 0.34, 0.4) + 0.24 * step(tv, 0.58, 0.64) + 0.42 * step(tv, 0.82, 0.88);   // flat washes
+      var hatch = tv > 0.24 && tv < 0.6 && (x + y) % 6 === 0 ? 0.28 : 0;                                    // diagonal hatching
+      var ed = step(G[i] / g90, 1.0, 1.8), dry = 0.88 + 0.12 * hash3(x >> 1, y >> 1, 9);
+      var al = Math.max(tone, hatch);
+      al = tone > 0.3 ? al * (1 - ed * 0.9) : Math.max(al, ed * 0.95);                               // outlines: light on dark, dark on light
+      o[i * 4] = 237; o[i * 4 + 1] = 229; o[i * 4 + 2] = 209;
+      o[i * 4 + 3] = Math.round(255 * clamp01(al * dry));
+    }
+    var res = document.createElement("canvas"); res.width = w; res.height = h;
+    res.getContext("2d").putImageData(out, 0, 0);
+    return res;
+  }
+
+  // A photo shot: the inked photo as a print, tilted a little, on the right; captions sit on the left.
+  function sPhoto(t) {
+    var s = this.photo, ink = inkPhoto(s.src), asp = s.aspect;
+    var bw = 600, bh = bw / asp;
+    if (bh > 470) { bh = 470; bw = bh * asp; }
+    var cx = 930 - bw / 2 - 16, cy = 270, tilt = s.tilt == null ? -0.02 : s.tilt;
+    var a = prog(t, 0.2, 0.6), m = 14;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(tilt);
+    fill(rectPts(-bw / 2 - m, -bh / 2 - m, bw + m * 2, bh + m * 3.2, 0.8), PAPER, a);                     // the print's border
+    fill(rectPts(-bw / 2, -bh / 2, bw, bh, 0.3), INK, a, { still: true });
+    if (ink) {
+      var rv = reduceMotion ? 1 : easeInOut(prog(t, 0.6, 1.6));                                      // a ragged wipe reveals it
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(-bw / 2, -bh / 2);
+      for (var k = 0; k <= 12; k++) {
+        var yy = -bh / 2 + (bh * k) / 12, edge = -bw / 2 + (bw + 60) * rv - 30 + Math.sin(k * 1.7) * 18;
+        ctx.lineTo(Math.min(bw / 2, edge), yy);
+      }
+      ctx.lineTo(-bw / 2, bh / 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.globalAlpha = a;
+      ctx.drawImage(ink, -bw / 2, -bh / 2, bw, bh);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+    brush(rectPts(-bw / 2, -bh / 2, bw, bh, 0.4), 1.6, prog(t, 0.3, 0.8), { color: INK, taper: 0.03, alpha: a });
+    brush(rectPts(-bw / 2 - m - 5, -bh / 2 - m - 5, bw + m * 2 + 10, bh + m * 3.2 + 10, 0.8), 1.5, prog(t, 0.2, 1), { taper: 0.03 });
+    ctx.restore();
+  }
+
   // ---------------------------------------------------------------- scene: behind a section's gallery, a quiet night
   function sGallery(t) {
     stars(60, 0, 0, W, 420, t, 0);
@@ -1569,11 +1675,12 @@
     lexington: { draw: sLexington, seed: 55, anchor: "tl", enter: "rise",
       lines: ["august 2026: about 12,000 km later.", "washington and lee university, lexington, virginia.", "a math + cs double major, on a full-ride scholarship."] },
     today: { draw: sEnd, seed: 77, anchor: "tl", enter: "wipe",
-      lines: ["that’s my story so far.", "want to see more? pick one:"],
+      lines: ["that’s my story so far.", "still building.", "want to see more? pick one:"],
       choices: [
         { label: "projects →", track: "projects", aria: "Watch my projects" },
         { label: "experience →", track: "experience", aria: "Watch my experience" },
         { label: "words i live by →", track: "words", aria: "Words that give meaning to my life" },
+        { label: "gallery →", track: "gallery", aria: "See my photos, in ink" },
         { label: "résumé →", track: "resume", aria: "See my résumé" }
       ],
       links: [
@@ -1603,6 +1710,13 @@
       items: [
         { id: "walden", label: "thoreau", aria: "Open the Thoreau quote" },
         { id: "penguins", label: "penguins on the ice", aria: "Open the penguin quote" }
+      ] },
+
+    gallery: { draw: sGallery, seed: 153, anchor: "tc",
+      lines: ["a few moments, in ink.", "pick one."],
+      items: [
+        { id: "night-on-campus", label: "a night on campus", aria: "Open the photo: a night on campus" },
+        { id: "dinner-with-friends", label: "dinner with friends", aria: "Open the photo: dinner with friends" }
       ] },
 
     // projects
@@ -1644,6 +1758,12 @@
     penguins: { draw: sPenguins, seed: 140, anchor: "tc",
       lines: [["“she said we are penguins on the ice.", "\nwe’re not meant to fly,", "\nbut god knows we can try.”"]] },
 
+    // photos, inked (photo: the file and its width ÷ height)
+    "night-on-campus": { draw: sPhoto, seed: 160, anchor: "tl", photo: { src: "assets/gallery/night-on-campus.jpg", aspect: 4 / 3, focusY: 0.75 },
+      lines: ["a night on campus."] },
+    "dinner-with-friends": { draw: sPhoto, seed: 161, anchor: "tl", photo: { src: "assets/gallery/dinner-with-friends.jpg", aspect: 16 / 9, tilt: 0.015 },
+      lines: ["dinner with friends."] },
+
     // résumé
     resume: { draw: sResume, seed: 120, anchor: "tl",
       lines: ["the one-page version.", "education, projects, experience and skills."],
@@ -1668,10 +1788,11 @@
     projects: ["projects", "diatometer", "walden-life", "satitude"],
     experience: ["experience", "courses", "nepalingo"],
     words: ["words", "walden", "penguins"],
+    gallery: ["gallery", "night-on-campus", "dinner-with-friends"],
     resume: ["resume"]
   };
   var MENU = "today";
-  var ALIASES = { contact: "today", menu: "today", quotes: "words", "summer-builds": "walden-life" };
+  var ALIASES = { contact: "today", menu: "today", quotes: "words", photos: "gallery", "summer-builds": "walden-life" };
 
   function locate(id) {
     id = ALIASES[id] || id;
@@ -1732,7 +1853,7 @@
     ctx.fillStyle = INK;
     ctx.fillRect(0, 0, W, H);
     sid = 0; R = mulberry32(s.seed);
-    s.draw(t);
+    s.draw.call(s, t);
   }
 
   // ---------------------------------------------------------------- state
@@ -1943,9 +2064,25 @@
     var T = thumbs[id] || (thumbs[id] = { c: document.createElement("canvas"), boil: -1 });
     var pw = Math.max(1, Math.round(w * dpr)), ph = Math.max(1, Math.round(h * dpr));
     if (T.c.width !== pw || T.c.height !== ph) { T.c.width = pw; T.c.height = ph; T.boil = -1; }
-    if (T.boil !== boil) {   // redrawn only when the ink "boils", about 8 times a second
+    var photo = SHOT[id].photo;
+    if (photo) {   // a photo's card is the inked photo itself, cropped to fill the card
+      var ink = inkPhoto(photo.src);
+      if (T.boil !== "photo" + photoVersion) {
+        var g = T.c.getContext("2d");
+        g.setTransform(1, 0, 0, 1, 0, 0);
+        g.globalAlpha = 1; g.fillStyle = INK; g.fillRect(0, 0, pw, ph);
+        if (ink) {
+          var sc = Math.max(pw / ink.width, ph / ink.height), dw = ink.width * sc, dh = ink.height * sc;
+          g.drawImage(ink, (pw - dw) / 2, (ph - dh) * (photo.focusY == null ? 0.5 : photo.focusY), dw, dh);
+        }
+        T.boil = "photo" + photoVersion;
+      }
+      return T.c;
+    }
+    var key = boil + "/" + photoVersion;
+    if (T.boil !== key) {   // redrawn only when the ink "boils" (about 8 times a second), or a photo finishes inking
       renderScene(SHOT[id], reduceMotion ? 60 : 60 + now / 1000, T.c.getContext("2d"), pw);
-      T.boil = boil;
+      T.boil = key;
     }
     return T.c;
   }
