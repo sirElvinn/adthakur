@@ -1544,7 +1544,8 @@
   // ---------------------------------------------------------------- photos, inked
   // A photo is turned into the film's ink once, when it loads: bright areas become paper-coloured washes in a
   // few flat tones, mid-tones get diagonal hatching, and outlines become paper lines in the dark and dark lines
-  // in the light, broken up a little like dry brush. To add a photo, see the README.
+  // in the light, broken up a little like dry brush. No shot uses this right now (the photo gallery is off for
+  // now); a shot with draw: sPhoto and photo: { src, aspect } brings it back.
   var PHOTOS = {}, photoVersion = 0;
   function inkPhoto(src) {
     var P = PHOTOS[src];
@@ -1680,7 +1681,6 @@
         { label: "projects →", track: "projects", aria: "Watch my projects" },
         { label: "experience →", track: "experience", aria: "Watch my experience" },
         { label: "words i live by →", track: "words", aria: "Words that give meaning to my life" },
-        { label: "gallery →", track: "gallery", aria: "See my photos, in ink" },
         { label: "résumé →", track: "resume", aria: "See my résumé" }
       ],
       links: [
@@ -1710,13 +1710,6 @@
       items: [
         { id: "walden", label: "thoreau", aria: "Open the Thoreau quote" },
         { id: "penguins", label: "penguins on the ice", aria: "Open the penguin quote" }
-      ] },
-
-    gallery: { draw: sGallery, seed: 153, anchor: "tc",
-      lines: ["a few moments, in ink.", "pick one."],
-      items: [
-        { id: "night-on-campus", label: "a night on campus", aria: "Open the photo: a night on campus" },
-        { id: "dinner-with-friends", label: "dinner with friends", aria: "Open the photo: dinner with friends" }
       ] },
 
     // projects
@@ -1758,12 +1751,6 @@
     penguins: { draw: sPenguins, seed: 140, anchor: "tc",
       lines: [["“she said we are penguins on the ice.", "\nwe’re not meant to fly,", "\nbut god knows we can try.”"]] },
 
-    // photos, inked (photo: the file and its width ÷ height)
-    "night-on-campus": { draw: sPhoto, seed: 160, anchor: "tl", photo: { src: "assets/gallery/night-on-campus.jpg", aspect: 4 / 3, focusY: 0.75 },
-      lines: ["a night on campus."] },
-    "dinner-with-friends": { draw: sPhoto, seed: 161, anchor: "tl", photo: { src: "assets/gallery/dinner-with-friends.jpg", aspect: 16 / 9, tilt: 0.015 },
-      lines: ["dinner with friends."] },
-
     // résumé
     resume: { draw: sResume, seed: 120, anchor: "tl",
       lines: ["the one-page version.", "education, projects, experience and skills."],
@@ -1788,11 +1775,10 @@
     projects: ["projects", "diatometer", "walden-life", "satitude"],
     experience: ["experience", "courses", "nepalingo"],
     words: ["words", "walden", "penguins"],
-    gallery: ["gallery", "night-on-campus", "dinner-with-friends"],
     resume: ["resume"]
   };
   var MENU = "today";
-  var ALIASES = { contact: "today", menu: "today", quotes: "words", photos: "gallery", "summer-builds": "walden-life" };
+  var ALIASES = { contact: "today", menu: "today", quotes: "words", "summer-builds": "walden-life" };
 
   function locate(id) {
     id = ALIASES[id] || id;

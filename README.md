@@ -6,7 +6,7 @@ camera drifts slowly in, then moves on to the next shot. All words appear only i
 
 The main story is just my life: Pokhara, Budhanilkantha School, moving to Lexington for Washington and Lee.
 It ends on "still building." and a choice: **projects**, **experience**, **words I live by** (two quotes that give
-meaning to my life), a **gallery** of my photos in ink, or **résumé**, plus email, GitHub and LinkedIn. Projects, experience and words each open on a gallery: small
+meaning to my life) or **résumé**, plus email, GitHub and LinkedIn. Projects, experience and words each open on a gallery: small
 ink pictures pegged to a line, one per story. Clicking a picture plays that story's short film, which then
 returns to the gallery, so nobody has to sit through anything they didn't pick.
 
@@ -85,11 +85,8 @@ Deployments** lists every version, and any earlier one can be put back with one 
 
 ## Keeping it up to date
 
-- New photo for the gallery: put it in `assets/gallery/` (a JPEG about 1500 px wide is plenty). In `film.js`, copy
-  the `"dinner-with-friends"` shot, give it a new name, its file, its width ÷ height as `aspect`, and a caption.
-  Then add the name to the `gallery` track and to the `items` of the `gallery` shot. The film inks the photo
-  itself when it loads, so there's nothing else to do. (`focusY`, 0 to 1, picks which part of a tall photo its
-  gallery card shows; `tilt` turns the print a little.)
+- Photos: the film can ink a photo by itself (`sPhoto` and `inkify` in `film.js`). The photo gallery section that
+  used them is off for now; commit f4e9de1 in the history has it, if it ever comes back.
 - New résumé: replace `assets/aditya-thakur-resume.pdf` with the new PDF, keeping the same file name.
 - Link preview: `assets/og.jpg` is the image shown when someone shares adthakur.com. It's a still of the opening
   shot: open `/?og` at 1200×630 (it shows just the name and the line under it) and save a screenshot over it.
